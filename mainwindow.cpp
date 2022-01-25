@@ -8,6 +8,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
     setWindowTitle("LinkScope");
 
+    setStylesheet();//设置全局样式表
+
     graph=new GraphWindow();//创建并显示绘图窗口
     graph->setVarList(&varList);
     graph->show();
@@ -163,7 +165,16 @@ void MainWindow::slotTableTimerTrig()
 //连接按钮点击，触发连接状态切换
 void MainWindow::on_bt_conn_clicked()
 {
-    setConnState(!connected);
+    if(!connected && !axfChosen)//用户未选择axf文件就点击连接按钮
+    {
+        QMessageBox msgBox;
+        msgBox.setWindowTitle("警告");
+        msgBox.setText("还未选择符号文件，连接后仅能使用绝对地址查看变量，是否继续连接？");
+        msgBox.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
+        if(msgBox.exec()!=QMessageBox::Ok)
+            return;
+    }
+    setConnState(!connected);//切换连接状态
 }
 
 //设置连接状态（参数true表示进行连接，false表示断开连接）
@@ -215,6 +226,8 @@ void MainWindow::setOCDState(bool connect)
     }
     else
     {
+        if(ocdProcess->state()==QProcess::NotRunning)
+            return;
         QProcess killProcess(0);//创建新进程，用taskkill强行结束ocd进程
         killProcess.setProgram("taskkill");
         killProcess.setNativeArguments(QString("/F /PID %1").arg(ocdProcess->pid()->dwProcessId));
@@ -229,6 +242,7 @@ void MainWindow::setGDBState(bool run)
     if(run)
     {
         gdbProcess->setProgram(QCoreApplication::applicationDirPath()+"/gdb/gdb.exe");//设置程序路径
+        gdbProcess->setWorkingDirectory(QCoreApplication::applicationDirPath()+"/gdb");//设置工作路径
         gdbProcess->setNativeArguments("-q");//设置gdb在安静模式下打开
         gdbProcess->start();
     }
@@ -241,17 +255,23 @@ void MainWindow::setGDBState(bool run)
 //参数true：gdb连接到本机3333端口，设置调试参数；参数false：断开gdb连接
 void MainWindow::setGDBConnState(bool connect)
 {
+    QString tmpFilePath=QCoreApplication::applicationDirPath()+"/gdb/tmp";//临时符号文件路径
     if(connect)
     {
         gdbProcess->write("target remote localhost:3333\r\n");//连接到3333端口
-        gdbProcess->write(QString("symbol-file %1 \r\n").arg(ui->txt_axf_path->text()).toStdString().c_str());//设置符号文件为所选的axf文件
+        QFile::remove(tmpFilePath);//确保删除当前的临时文件
+        QFile::copy(ui->txt_axf_path->text(),tmpFilePath);//将所选符号文件复制为临时文件
+        gdbProcess->write(QString("symbol-file %1 \r\n").arg("tmp").toStdString().c_str());//设置符号文件
         gdbProcess->write("set confirm off\r\n");//设置不要手动确认
         gdbProcess->write("set print pretty on\r\n");//设置结构体规范打印
         setGDBDispList();//向gdb发送当前的变量列表
     }
     else
     {
-        gdbProcess->write("disconnect\r\n");
+        gdbProcess->write("symbol-file\r\n");//取消符号文件
+        gdbProcess->write("disconnect\r\n");//断开gdb连接
+        sleep(10);//确保对临时文件取消占用
+        QFile::remove(tmpFilePath);//删除复制过来的临时文件
     }
 }
 
@@ -335,7 +355,7 @@ void MainWindow::on_bt_set_axf_clicked()
     QFileDialog *fileDialog = new QFileDialog(this);//弹出文件选择框
     fileDialog->setWindowTitle(QStringLiteral("选中文件"));
     fileDialog->setDirectory(".");
-    fileDialog->setNameFilter(tr("AXF File (*.axf)"));//设置文件过滤器为axf
+    fileDialog->setNameFilter(tr("AXF/ELF File (*.axf *.elf)"));//设置文件过滤器为axf/elf
     fileDialog->setFileMode(QFileDialog::ExistingFile);
     fileDialog->setViewMode(QFileDialog::Detail);
     if(fileDialog->exec())
@@ -344,6 +364,7 @@ void MainWindow::on_bt_set_axf_clicked()
         QString fileName=fileList.at(0);
         QFileInfo info(fileName);
         ui->txt_axf_path->setText(info.filePath());
+        axfChosen=true;
     }
 }
 
@@ -414,6 +435,7 @@ void MainWindow::saveToFile(const QString &filename)
     settings.beginGroup("Global");//写入全局配置
     settings.setValue("Interface",ui->cb_interface->currentText());
     settings.setValue("Target",ui->cb_target->currentText());
+    settings.setValue("AxfChosen",axfChosen);
     settings.setValue("AxfPath",ui->txt_axf_path->text());
     settings.setValue("VarNum",varList.size());
     settings.endGroup();
@@ -438,6 +460,7 @@ void MainWindow::loadFromFile(const QString &filename)
     settings.beginGroup("Global");//读取全局配置
     ui->cb_interface->setCurrentText(settings.value("Interface").toString());
     ui->cb_target->setCurrentText(settings.value("Target").toString());
+    axfChosen=settings.value("AxfChosen",true).toBool();
     ui->txt_axf_path->setText(settings.value("AxfPath").toString());
     int varNum=settings.value("VarNum").toInt();
     settings.endGroup();
@@ -613,7 +636,7 @@ void MainWindow::on_action_export_triggered()
 void MainWindow::on_action_about_triggered()
 {
     //弹出messagebox显示关于信息
-    QString str="LinkScope 版本号：V1.0.0\n\n"
+    QString str="LinkScope 版本号：V1.0.1\n\n"
                 "Developed by Skythinker";
     QMessageBox box;
     box.setWindowTitle("关于 LinkScope");
@@ -664,4 +687,12 @@ void MainWindow::on_action_refresh_conf_triggered()
 void MainWindow::on_action_homepage_triggered()
 {
     QDesktopServices::openUrl(QUrl("https://gitee.com/skythinker/link-scope"));//打开仓库主页
+}
+
+//设置QSS全局样式
+void MainWindow::setStylesheet()
+{
+    QFile qss(":/qss/light-blue.qss");
+    if(qss.open(QIODevice::ReadOnly))
+        qApp->setStyleSheet(QLatin1String(qss.readAll()));
 }

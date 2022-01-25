@@ -1,0 +1,155 @@
+QMainWindow,QDialog{
+	background: white;
+}
+
+*:disabled{
+        background: rgb(221, 221, 221);
+}
+
+QGroupBox{
+	border: 2px solid rgb(85, 170, 255);
+	border-radius: 10px;
+	padding: 15px 5px 3px 5px;
+	color: rgb(85, 170, 255);
+	font-size: 9pt;
+	font-family: "Microsoft YaHei UI";
+	font: bold;
+}
+
+QGroupBox::title{
+	subcontrol-origin: margin;
+	subcontrol-position: top left;
+	border-top: 2px solid rgb(85, 170, 255);
+	border-left: 2px solid rgb(85, 170, 255);
+}
+
+QLineEdit{
+	border: 2px solid rgb(85, 170, 255);
+	border-radius: 3px;
+	background-color: white;
+}
+
+QPushButton{
+	border: 2px solid rgb(85, 170, 255);
+	border-radius: 5px;
+	background-color: white;
+	padding: 3px 5px 3px 5px;
+	color: rgb(85, 170, 255);
+	font-size: 9pt;
+	font-family: "Microsoft YaHei UI";
+	font: bold;
+}
+
+QPushButton:hover{
+	border: 2px solid white;
+	background-color: rgb(85, 170, 255);
+	color: white;
+}
+
+QRadioButton:indicator{
+	width: 22px;
+	height: 22px;
+}
+
+QRadioButton:indicator:unchecked{
+	image: url(:/qss/qss-img/light-blue-radiobutton-unchecked.png)
+}
+
+QRadioButton:indicator:checked{
+	image: url(:/qss/qss-img/light-blue-radiobutton-checked.png)
+}
+
+QCheckBox:indicator{
+	width: 22px;
+	height: 22px;
+}
+
+QCheckBox:indicator:unchecked{
+	image: url(:/qss/qss-img/light-blue-checkbox-unchecked.png)
+}
+
+QCheckBox:indicator:checked{
+	image: url(:/qss/qss-img/light-blue-checkbox-checked.png)
+}
+
+QComboBox{
+	border: 2px solid rgb(85, 170, 255);
+	border-radius: 3px;
+	background-color: white;
+	min-width: 80px;
+	padding: 2px;
+}
+
+QComboBox:drop-down{
+	subcontrol-origin: padding;
+	subcontrol-position: top right;
+	width: 15px;
+	margin: 2px;
+	padding-left: 2px;
+	border-left: 2px solid rgb(85, 170, 255);
+	image: url(:/qss/qss-img/light-blue-downarrow.png);
+}
+
+QComboBox:drop-down:on{
+	image: url(:/qss/qss-img/light-blue-uparrow.png)
+}
+
+QSpinBox,QDoubleSpinBox{
+	border: 2px solid rgb(85, 170, 255);
+	border-radius: 3px;
+	background-color: white;
+}
+
+QSpinBox:up-button,QSpinBox:down-button,QDoubleSpinBox:up-button,QDoubleSpinBox:down-button{
+	width: 0px;
+}
+
+QSlider:groove:horizontal{
+	height: 0px;
+	border: 3px solid rgba(85, 170, 255,150);
+	border-radius: 3px;
+}
+
+QSlider::handle:horizontal{
+	width: 15px;
+	margin: -10px 0px;
+	border: 2px solid rgb(85, 170, 255);
+	border-radius: 3px;
+	background-color: white;
+}
+
+QMenuBar{
+	background-color: white;
+}
+
+QMenuBar:item{
+	padding: 5px 20px;
+}
+
+QMenuBar:item:selected{
+	border-bottom: 3px solid rgb(85, 170, 255);
+}
+
+QMenu{
+	border-radius: 3px;
+	background-color: white;
+}
+
+QMenu:item{
+	background-color: white;
+	padding: 8px 15px;
+}
+
+QMenu::item:selected{
+	background-color: rgb(85, 170, 255);
+}
+
+QMenu::separator{
+	height: 0px;
+	border: 1px solid rgb(85, 170, 255);
+	background-color: white;
+}
+
+QTableView{
+        border: 2px solid rgb(85, 170, 255);
+}

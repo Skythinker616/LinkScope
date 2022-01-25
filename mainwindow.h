@@ -63,6 +63,8 @@ private:
     QElapsedTimer *stampTimer;//时间戳定时器指针
     GraphWindow *graph;//绘图窗口指针
     bool isWatchProcessing=false;//标记当前是否正在处理变量值查看
+    bool axfChosen=false;//是否已经选择了axf文件
+    void setStylesheet();
     void setConnState(bool connect);
     void setOCDState(bool connect);
     void setGDBState(bool run);

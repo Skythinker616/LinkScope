@@ -34,7 +34,7 @@ void GraphWindow::paintGraph(QWidget *canvas)
     QPainter painter(canvas); //画笔
 
     painter.setBrush(QBrush(QColor(Qt::white)));//填充背景
-    painter.drawRect(posx,posy,wid,hei);
+    painter.drawRect(posx,posy,wid-1,hei-1);
 
     //绘制标记线
     painter.setPen(QPen(QColor(184,184,184),2,Qt::DotLine));

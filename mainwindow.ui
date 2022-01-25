@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>918</width>
-    <height>727</height>
+    <width>893</width>
+    <height>680</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -87,14 +87,7 @@
        <item>
         <widget class="QLabel" name="label_3">
          <property name="text">
-          <string>Axf文件路径</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="txt_axf_path">
-         <property name="text">
-          <string>请选择axf文件</string>
+          <string>符号文件(AXF/ELF)</string>
          </property>
         </widget>
        </item>
@@ -112,9 +105,16 @@
         </spacer>
        </item>
        <item>
+        <widget class="QLabel" name="txt_axf_path">
+         <property name="text">
+          <string>请设置符号文件</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QPushButton" name="bt_set_axf">
          <property name="text">
-          <string>设置Axf路径</string>
+          <string>设置符号文件</string>
          </property>
         </widget>
        </item>
@@ -128,7 +128,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>918</width>
+     <width>893</width>
      <height>29</height>
     </rect>
    </property>
@@ -190,6 +190,9 @@
   </action>
   <action name="action_refresh_conf">
    <property name="text">
+    <string>刷新连接配置</string>
+   </property>
+   <property name="toolTip">
     <string>刷新连接配置</string>
    </property>
   </action>

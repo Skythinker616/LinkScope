@@ -1,0 +1,11 @@
+<RCC>
+    <qresource prefix="/">
+        <file>qss/light-blue.qss</file>
+        <file>qss/qss-img/light-blue-checkbox-checked.png</file>
+        <file>qss/qss-img/light-blue-checkbox-unchecked.png</file>
+        <file>qss/qss-img/light-blue-downarrow.png</file>
+        <file>qss/qss-img/light-blue-radiobutton-checked.png</file>
+        <file>qss/qss-img/light-blue-radiobutton-unchecked.png</file>
+        <file>qss/qss-img/light-blue-uparrow.png</file>
+    </qresource>
+</RCC>
