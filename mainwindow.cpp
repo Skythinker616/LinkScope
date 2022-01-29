@@ -14,6 +14,11 @@ MainWindow::MainWindow(QWidget *parent)
     graph->setVarList(&varList);
     graph->show();
 
+    listWindow=new ListWindow();
+    listWindow->show();
+    connect(listWindow,SIGNAL(add2Edit(const QString &)),this,SLOT(slotOnVarAdd2Edit(const QString &)));
+    connect(listWindow,SIGNAL(add2List(const QString &)),this,SLOT(slotOnVarAdd2List(const QString &)));
+
     stampTimer=new QElapsedTimer();//创建并运行时间戳定时器
     stampTimer->start();
 
@@ -83,6 +88,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
 {
     Q_UNUSED(event);
     graph->close();
+    listWindow->close();
 }
 
 //ocd进程发生错误，自动断开连接
@@ -160,6 +166,20 @@ void MainWindow::slotTableTimerTrig()
             item->setBackground(QBrush(QColor(Qt::white)));//若不发生变化则设置单元格背景为白色
         }
     }
+}
+
+//选择器窗口添加到编辑框槽函数
+void MainWindow::slotOnVarAdd2Edit(const QString &name)
+{
+    tableModel->disconnect(this,SLOT(slotTableEdit(QModelIndex,QModelIndex)));//断开信号连接，否则触发后会直接添加到列表
+    tableModel->item(tableModel->rowCount()-1,0)->setText(name);
+    connect(tableModel,SIGNAL(dataChanged(QModelIndex,QModelIndex)),this,SLOT(slotTableEdit(QModelIndex,QModelIndex)));//恢复信号连接
+}
+
+//选择器窗口添加到列表槽函数
+void MainWindow::slotOnVarAdd2List(const QString &name)
+{
+    tableModel->item(tableModel->rowCount()-1,0)->setText(name);
 }
 
 //连接按钮点击，触发连接状态切换
@@ -326,7 +346,7 @@ void MainWindow::parseGDBRawDisp(QString &raw)
     }
 }
 
-//延时制定毫秒数，进行子任务循环
+//延时指定毫秒数，进行子任务循环
 void MainWindow::sleep(uint32_t ms)
 {
     QTime untilTime=QTime::currentTime().addMSecs(ms);
@@ -365,6 +385,7 @@ void MainWindow::on_bt_set_axf_clicked()
         QFileInfo info(fileName);
         ui->txt_axf_path->setText(info.filePath());
         axfChosen=true;
+        listWindow->loadNewAxfFile(info.filePath());
     }
 }
 
@@ -478,6 +499,9 @@ void MainWindow::loadFromFile(const QString &filename)
     }
 
     redrawTable();//重绘表格
+
+    if(axfChosen)//刷新选择窗口
+        listWindow->loadNewAxfFile(ui->txt_axf_path->text());
 }
 
 //导出变量采样数据到指定CSV文件中
@@ -635,39 +659,13 @@ void MainWindow::on_action_export_triggered()
 //关于菜单栏点击
 void MainWindow::on_action_about_triggered()
 {
-    //弹出messagebox显示关于信息
-    QString str="LinkScope 版本号：V1.0.1\n\n"
-                "Developed by Skythinker";
-    QMessageBox box;
-    box.setWindowTitle("关于 LinkScope");
-    box.setText(str);
-    box.exec();
+    AboutWindow().exec();
 }
 
 //帮助菜单栏点击
 void MainWindow::on_action_help_triggered()
 {
-    //弹出messagebox显示帮助信息
-    QString str="LinkScope简介\n"
-                "本程序使用QT编写，基于OpenOCD和GDB，用于硬件设备的调试，可以实时查看并修改变量值，有波形绘制和数据导出功能\n"
-                "程序支持OpenOCD支持的各种调试器及硬件芯片，如STLink、JLink、CMSIS-DAP等以及STM32全系列等\n\n"
-                "使用方法\n"
-                "1.在下拉框中选择调试器和芯片类型，选择Axf文件路径，点击连接即可尝试连接芯片\n"
-                "2.在表格最后一行变量名处填写变量名可以添加查看变量，选中变量名按Del键可以删除变量\n"
-                "3.编辑【修改变量】列可以修改变量值，双击【图线颜色】列可以选择绘图颜色\n"
-                "4.单击【变量名】列选中对应的变量，可以在绘图窗口查看历史数据，并会加粗绘制\n"
-                "5.绘图界面说明请到绘图窗口点击操作说明\n"
-                "6.点击菜单中的保存/导入配置可以将当前配置保存到INI文件或从文件中恢复配置，点击导出数据可以将获取到的采样数据导出到CSV表格文件\n\n"
-                "注意事项\n"
-                "1.修改Axf路径后需要重新连接\n"
-                "2.在【变量名】列不仅能填写单个变量名，还可以填入任何合法的C语言表达式\n"
-                "3.连接目标前请确认已使用该调试器为目标芯片下载过指定程序\n"
-                "4.若程序闪退后发现下一次运行时无法连接目标，请尝试手动结束openocd.exe进程\n"
-                "5.连接配置文件位于openocd/share/openocd/scripts下的target和interface中，用户可按照openocd语法编写配置脚本，放入对应目录下后点击“刷新连接配置”菜单项\n";
-    QMessageBox box;
-    box.setWindowTitle("LinkScope 帮助");
-    box.setText(str);
-    box.exec();
+    HelpWindow().exec();
 }
 
 //显示绘图窗口菜单点击
@@ -695,4 +693,75 @@ void MainWindow::setStylesheet()
     QFile qss(":/qss/light-blue.qss");
     if(qss.open(QIODevice::ReadOnly))
         qApp->setStyleSheet(QLatin1String(qss.readAll()));
+}
+
+//显示选择窗口菜单点击
+void MainWindow::on_action_show_selector_triggered()
+{
+    listWindow->show();
+    listWindow->activateWindow();
+}
+
+//反馈菜单点击
+void MainWindow::on_action_feedback_triggered()
+{
+    QDesktopServices::openUrl(QUrl("https://support.qq.com/product/378753"));//打开反馈页面
+}
+
+//检查更新
+void MainWindow::checkUpdate()
+{
+    QNetworkAccessManager *manager=new QNetworkAccessManager;
+    if(manager->networkAccessible()!=QNetworkAccessManager::Accessible)
+        manager->setNetworkAccessible(QNetworkAccessManager::Accessible);
+    connect(manager,&QNetworkAccessManager::finished,
+        [=](QNetworkReply *reply){ //解析收到的网络数据
+            if(reply->error()==QNetworkReply::NoError)
+            {
+                QString raw=reply->readAll();
+                QRegExp rx("\"tag_name\":\"v([0-9.]+)\"");//正则匹配原始字符串中的版本号
+                rx.setMinimal(true);
+                if(rx.indexIn(raw)!=-1)
+                {
+                    QString tag=rx.cap(1);//截取出版本号字符串
+                    if(!tag.isEmpty())
+                    {
+                        if(tag!=APP_VERSION)//与宏定义中的当前版本号进行比较
+                        {
+                            QMessageBox msgBox;
+                            msgBox.setWindowTitle("提示");
+                            msgBox.setText("检查到新版本 V"+tag+" ，是否去更新？");
+                            msgBox.setStandardButtons(QMessageBox::Yes|QMessageBox::No);
+                            if(msgBox.exec()==QMessageBox::Yes)
+                            {
+                                QDesktopServices::openUrl(QUrl("https://gitee.com/skythinker/link-scope/releases"));//打开仓库release页面
+                            }
+                        }
+                        else
+                        {
+                            QMessageBox::information(this,"提示","当前已是最新版本");
+                        }
+                    }
+                }
+                else//正则匹配失败，说明服务器返回的格式有误，无法继续解析
+                {
+                    QMessageBox::warning(this,"错误","检查失败，建议点击菜单转到主页查看");
+                }
+            }
+            else
+            {
+                QMessageBox::warning(this,"错误","网络错误，请检查网络");
+            }
+        }
+    );
+    QNetworkRequest request;
+    request.setHeader(QNetworkRequest::ContentTypeHeader,"application/x-www-form-urlencoded");
+    request.setUrl(QUrl("https://gitee.com/api/v5/repos/skythinker/link-scope/releases/latest"));//发送get请求到gitee服务器
+    manager->get(request);
+}
+
+//检查更新菜单点击
+void MainWindow::on_action_checkupdate_triggered()
+{
+    checkUpdate();
 }

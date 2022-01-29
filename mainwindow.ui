@@ -92,22 +92,21 @@
         </widget>
        </item>
        <item>
-        <spacer name="horizontalSpacer_2">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>557</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item>
         <widget class="QLabel" name="txt_axf_path">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="text">
           <string>请设置符号文件</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
          </property>
         </widget>
        </item>
@@ -136,8 +135,6 @@
     <property name="title">
      <string>菜单</string>
     </property>
-    <addaction name="action_show_graph"/>
-    <addaction name="separator"/>
     <addaction name="action_refresh_conf"/>
     <addaction name="separator"/>
     <addaction name="action_save"/>
@@ -151,10 +148,21 @@
     </property>
     <addaction name="action_help"/>
     <addaction name="separator"/>
+    <addaction name="action_checkupdate"/>
     <addaction name="action_homepage"/>
+    <addaction name="separator"/>
+    <addaction name="action_feedback"/>
     <addaction name="action_about"/>
    </widget>
+   <widget class="QMenu" name="menu_3">
+    <property name="title">
+     <string>窗口</string>
+    </property>
+    <addaction name="action_show_graph"/>
+    <addaction name="action_show_selector"/>
+   </widget>
    <addaction name="menu"/>
+   <addaction name="menu_3"/>
    <addaction name="menu_2"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
@@ -175,7 +183,7 @@
   </action>
   <action name="action_help">
    <property name="text">
-    <string>帮助</string>
+    <string>使用说明</string>
    </property>
   </action>
   <action name="action_about">
@@ -199,6 +207,21 @@
   <action name="action_homepage">
    <property name="text">
     <string>转到主页</string>
+   </property>
+  </action>
+  <action name="action_show_selector">
+   <property name="text">
+    <string>显示选择窗口</string>
+   </property>
+  </action>
+  <action name="action_feedback">
+   <property name="text">
+    <string>反馈</string>
+   </property>
+  </action>
+  <action name="action_checkupdate">
+   <property name="text">
+    <string>检查更新</string>
    </property>
   </action>
  </widget>

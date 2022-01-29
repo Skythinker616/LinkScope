@@ -19,6 +19,11 @@
 #include <qsettings.h>
 #include <qregexp.h>
 #include <qdesktopservices.h>
+#include <listwindow.h>
+#include <helpwindow.h>
+#include <aboutwindow.h>
+#include <qnetworkaccessmanager.h>
+#include <qnetworkreply.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -39,6 +44,8 @@ private slots:
     void slotTableEdit(QModelIndex topleft, QModelIndex bottomright);
     void slotWatchTimerTrig();
     void slotTableTimerTrig();
+    void slotOnVarAdd2Edit(const QString &name);
+    void slotOnVarAdd2List(const QString &name);
     void on_bt_conn_clicked();
     void on_bt_set_axf_clicked();
     void on_bt_reset_clicked();
@@ -52,6 +59,9 @@ private slots:
     void on_action_show_graph_triggered();
     void on_action_refresh_conf_triggered();
     void on_action_homepage_triggered();
+    void on_action_show_selector_triggered();
+    void on_action_feedback_triggered();
+    void on_action_checkupdate_triggered();
 
 private:
     Ui::MainWindow *ui;
@@ -64,6 +74,8 @@ private:
     GraphWindow *graph;//绘图窗口指针
     bool isWatchProcessing=false;//标记当前是否正在处理变量值查看
     bool axfChosen=false;//是否已经选择了axf文件
+    ListWindow *listWindow;
+    void checkUpdate();
     void setStylesheet();
     void setConnState(bool connect);
     void setOCDState(bool connect);

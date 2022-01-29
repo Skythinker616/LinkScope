@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>HelpWindow</class>
+ <widget class="QDialog" name="HelpWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>569</width>
+    <height>504</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>LinkScope - Help</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true"/>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout_2">
+   <item>
+    <widget class="QScrollArea" name="scrollArea">
+     <property name="autoFillBackground">
+      <bool>false</bool>
+     </property>
+     <property name="styleSheet">
+      <string notr="true"/>
+     </property>
+     <property name="widgetResizable">
+      <bool>true</bool>
+     </property>
+     <widget class="QWidget" name="scrollAreaWidgetContents">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>523</width>
+        <height>906</height>
+       </rect>
+      </property>
+      <property name="autoFillBackground">
+       <bool>false</bool>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color: white;</string>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <widget class="QLabel" name="label">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;LinkScope简介&lt;/span&gt;&lt;/p&gt;&lt;p&gt;本程序使用QT编写，基于OpenOCD和GDB，用于硬件设备的调试，可以实时查看并修改变量值，有波形绘制和数据导出功能 &lt;/p&gt;&lt;p&gt;程序支持OpenOCD支持的各种调试器及硬件芯片，如STLink、JLink、CMSIS-DAP等以及STM32全系列等&lt;/p&gt;&lt;hr&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;使用方法&lt;/span&gt;&lt;/p&gt;&lt;p&gt;1.在下拉框中选择调试器和芯片类型，选择Axf文件路径，点击连接即可尝试连接芯片 &lt;/p&gt;&lt;p&gt;2.在表格最后一行变量名处填写变量名可以添加查看变量，选中变量名按Del键可以删除变量 &lt;/p&gt;&lt;p&gt;3.在选择窗口中可以查看所选Axf文件包含的变量名，可以一键添加到编辑框或变量列表&lt;/p&gt;&lt;p&gt;4.编辑【修改变量】列可以修改变量值，双击【图线颜色】列可以选择绘图颜色 &lt;/p&gt;&lt;p&gt;5.单击【变量名】列选中对应的变量，可以在绘图窗口查看历史数据，并会加粗绘制 &lt;/p&gt;&lt;p&gt;6.绘图界面说明请到绘图窗口点击操作说明 &lt;/p&gt;&lt;p&gt;7.点击菜单中的保存/导入配置可以将当前配置保存到INI文件或从文件中恢复配置，点击导出数据可以将获取到的采样数据导出到CSV表格文件&lt;/p&gt;&lt;hr&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;注意事项 &lt;/span&gt;&lt;/p&gt;&lt;p&gt;1.修改Axf路径后需要重新连接 &lt;/p&gt;&lt;p&gt;2.在【变量名】列不仅能填写单个变量名，还可以填入任何合法的C语言表达式 &lt;/p&gt;&lt;p&gt;3.连接目标前请确认已使用该调试器为目标芯片下载过指定程序 &lt;/p&gt;&lt;p&gt;4.若程序闪退后发现下一次运行时无法连接目标，请尝试手动结束openocd.exe进程 &lt;/p&gt;&lt;p&gt;5.连接配置文件位于openocd/share/openocd/scripts下的target和interface中，用户可按照openocd语法编写配置脚本，放入对应目录下后点击“刷新连接配置”菜单项&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="textFormat">
+          <enum>Qt::AutoText</enum>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPushButton" name="btn_back">
+     <property name="text">
+      <string>返回</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

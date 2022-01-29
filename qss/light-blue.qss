@@ -3,7 +3,7 @@ QMainWindow,QDialog{
 }
 
 *:disabled{
-        background: rgb(221, 221, 221);
+		background: rgb(221, 221, 221);
 }
 
 QGroupBox{
@@ -151,5 +151,31 @@ QMenu::separator{
 }
 
 QTableView{
-        border: 2px solid rgb(85, 170, 255);
+	border: 2px solid rgb(85, 170, 255);
+}
+
+QTreeView{
+	border: 2px solid rgb(85, 170, 255);
+}
+
+QTreeView::branch:has-children:!has-siblings:closed,
+QTreeView::branch:closed:has-children:has-siblings{
+	image: url(:/qss/qss-img/light-blue-tree-closed.png);
+}
+
+QTreeView::branch:open:has-children:!has-siblings,
+QTreeView::branch:open:has-children:has-siblings{
+	image: url(:/qss/qss-img/light-blue-tree-open.png);
+}
+
+QTreeView::branch:has-siblings:!adjoins-item{
+	image: url(:/qss/qss-img/light-blue-tree-vline.png);
+}
+
+QTreeView::branch:has-siblings:adjoins-item{
+	image: url(:/qss/qss-img/light-blue-tree-more.png);
+}
+
+QTreeView::branch:!has-children:!has-siblings:adjoins-item{
+	image: url(:/qss/qss-img/light-blue-tree-end.png);
 }

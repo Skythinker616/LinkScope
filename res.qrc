@@ -7,5 +7,11 @@
         <file>qss/qss-img/light-blue-radiobutton-checked.png</file>
         <file>qss/qss-img/light-blue-radiobutton-unchecked.png</file>
         <file>qss/qss-img/light-blue-uparrow.png</file>
+        <file>qss/qss-img/light-blue-tree-open.png</file>
+        <file>qss/qss-img/light-blue-tree-closed.png</file>
+        <file>qss/qss-img/light-blue-tree-end.png</file>
+        <file>qss/qss-img/light-blue-tree-more.png</file>
+        <file>qss/qss-img/light-blue-tree-vline.png</file>
+        <file>icon.ico</file>
     </qresource>
 </RCC>
