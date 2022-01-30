@@ -24,6 +24,7 @@
 #include <aboutwindow.h>
 #include <qnetworkaccessmanager.h>
 #include <qnetworkreply.h>
+#include <gdbprocess.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -65,7 +66,8 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
-    QProcess *ocdProcess,*gdbProcess;//ocd和gdb进程指针
+    QProcess *ocdProcess;
+    GDBProcess *gdb;//GDB进程控制
     bool connected=false;//标记当前是否已连接
     QStandardItemModel *tableModel;//表格数据
     QList<VarInfo> varList;//变量列表
@@ -79,17 +81,10 @@ private:
     void setStylesheet();
     void setConnState(bool connect);
     void setOCDState(bool connect);
-    void setGDBState(bool run);
-    void setGDBConnState(bool connect);
-    void setGDBDispList();
-    void getGDBRawDisp(QString &raw);
-    void parseGDBRawDisp(QString &raw);
     void sleep(uint32_t ms);
     void loadConfFileList();
     void initTable();
     void redrawTable();
-    void setVar(const QString &name,double value);
-    bool getValueFromRaw(const QString &rawValue,double &value);
     void saveToFile(const QString &filename);
     void loadFromFile(const QString &filename);
     bool exportCSV(const QString &filename);

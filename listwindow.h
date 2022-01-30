@@ -8,6 +8,7 @@
 #include <qdebug.h>
 #include <QStandardItem>
 #include <qmessagebox.h>
+#include <gdbprocess.h>
 
 namespace Ui {
 class ListWindow;
@@ -19,7 +20,7 @@ public:
     QString name;//变量名
     QList<VarNode> children;//子节点
     VarNode *parent=NULL;//父节点
-    bool canExpand=false;//可展开状态，即该变量类型是否可被展开
+    bool expandable=false;//可展开状态，即该变量类型是否可被展开
     bool parsed=false;//是否已经解析出子节点信息
     VarNode(const QString &_name="",VarNode *_parent=NULL)
     {
@@ -35,7 +36,7 @@ public:
     {
         children.clear();
         name="";
-        canExpand=parsed=false;
+        expandable=parsed=false;
     }
 };
 
@@ -60,17 +61,11 @@ private slots:
 private:
     Ui::ListWindow *ui;
     QProcess *gdbProcess;
+    GDBProcess *gdb;
     VarNode varTree;
     QStandardItemModel *treeModel;
-    void setGDBState(bool run);
-    QString runGDBCmd(const QString &input);
-    QStringList parseVarList(const QString &raw);
-    void removeInnerSection(QString &raw,int offset=0);
     QString getVarFullName(const VarNode &node);
-    bool checkCanExpand(const QString &varFullName);
     void parseVarChildren(VarNode &node);
-    void updateTempFile(const QString &path);
-    void deleteTempFile();
     void updateTree();
 };
 

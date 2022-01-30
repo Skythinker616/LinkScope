@@ -38,8 +38,9 @@ MainWindow::MainWindow(QWidget *parent)
     ocdProcess=new QProcess(0);//创建openocd进程
     connect(ocdProcess,SIGNAL(readyReadStandardError()),this,SLOT(slotOCDErrorReady()));
 
-    gdbProcess=new QProcess(0);//创建并运行gdb进程
-    setGDBState(true);
+    gdb=new GDBProcess();//创建并启动GDB
+    gdb->setTempSymbolFileName("tmp");//设定临时符号文件名
+    gdb->start();
 
     loadConfFileList();//从openocd文件夹中读取配置文件列表
 }
@@ -47,12 +48,15 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
     if(connected)//若处于连接状态则断开连接
-        setConnState(false);
-    setGDBState(false);//结束gdb进程
+    {
+        gdb->disconnectFromRemote();
+        gdb->unloadSymbolFile();
+    }
+    gdb->stop();//结束gdb进程
     delete ui;
     delete tableModel;
     delete ocdProcess;
-    delete gdbProcess;
+    delete gdb;
     delete stampTimer;
     delete watchTimer;
     delete tableTimer;
@@ -121,7 +125,12 @@ void MainWindow::slotTableEdit(QModelIndex topleft, QModelIndex bottomright)
             redrawTable();//重绘表格
 
             if(connected)//若正在连接状态则向gdb发送新的变量列表
-                setGDBDispList();
+            {
+                QStringList nameList;
+                for(int index=0;index<varList.size();index++)
+                    nameList<<varList.at(index).name;
+                gdb->setDisplayList(nameList);
+            }
         }
     }
     else if(topleft.column()==2 && topleft.row()!=varList.size())//若编辑的是第二列，表示需进行变量值修改
@@ -130,7 +139,7 @@ void MainWindow::slotTableEdit(QModelIndex topleft, QModelIndex bottomright)
         QString valueStr=tableModel->item(topleft.row(),2)->text();
         if(!valueStr.isEmpty())
         {
-            setVar(name,valueStr.toDouble());//向gdb发送命令写入变量值
+            gdb->setVarValue(name,valueStr.toDouble());//向gdb发送命令写入变量值
             tableModel->item(topleft.row(),2)->setText("");//清空编辑框
         }
     }
@@ -143,9 +152,18 @@ void MainWindow::slotWatchTimerTrig()
         return;
     isWatchProcessing=true;
 
-    QString rawGDB;
-    getGDBRawDisp(rawGDB);//获取gdb查看得到的原始值
-    parseGDBRawDisp(rawGDB);//进行正则匹配，更新变量列表内容
+    qint64 timestamp=stampTimer->nsecsElapsed()/1000;//获取时间戳
+    QString rawDisplay=gdb->runCmd("display\r\n");//获取gdb查看得到的原始值
+    for(int index=0;index<varList.size();index++)//依次进行每个变量的匹配
+    {
+        varList[index].rawValue=gdb->captureValueFromDisplay(rawDisplay,varList.at(index).name);//进行正则匹配，截取出变量值部分
+        SamplePoint sample;
+        if(gdb->getDoubleFromDisplayValue(varList[index].rawValue,sample.value))//尝试转换为double，生成采样点并写入采样点列表
+        {
+            sample.timestamp=timestamp;
+            varList[index].samples.append(sample);
+        }
+    }
 
     isWatchProcessing=false;
 }
@@ -179,7 +197,9 @@ void MainWindow::slotOnVarAdd2Edit(const QString &name)
 //选择器窗口添加到列表槽函数
 void MainWindow::slotOnVarAdd2List(const QString &name)
 {
-    tableModel->item(tableModel->rowCount()-1,0)->setText(name);
+    QStandardItem *editItem=tableModel->item(tableModel->rowCount()-1,0);
+    editItem->setText("");//清空编辑框
+    editItem->setText(name);//在编辑框中填入变量名，会直接添加到列表中
 }
 
 //连接按钮点击，触发连接状态切换
@@ -207,14 +227,23 @@ void MainWindow::setConnState(bool connect)
         sleep(500);//等待500ms
         if(ocdProcess->state()==QProcess::Running)//若ocd成功启动
         {
-            setGDBConnState(true);//连接gdb到ocd
+            gdb->loadSymbolFile(ui->txt_axf_path->text());//设置gdb符号文件
+            gdb->connectToRemote("localhost:3333");//连接gdb到ocd
+            QStringList nameList;
+            for(int index=0;index<varList.size();index++)//向gdb发送变量列表
+                nameList<<varList.at(index).name;
+            gdb->setDisplayList(nameList);
+
             for(int i=0;i<varList.size();i++)//清空变量列表历史采样点数据
                 varList[i].samples.clear();
+
             stampTimer->restart();//开启时间戳计时
             watchTimer->start();//开启定时查看变量值
             tableTimer->start();//开启表格定时刷新
+
             ui->bt_conn->setText("断开连接");
             ui->bt_reset->setEnabled(true);//使能复位按钮
+
             connected=true;//更新连接标志
         }
         ui->bt_conn->setEnabled(true);//恢复连接按钮
@@ -223,8 +252,9 @@ void MainWindow::setConnState(bool connect)
     {
         watchTimer->stop();//停止定时查看和定时刷新表格
         tableTimer->stop();
-        setGDBConnState(false);//断开gdb，停止ocd
-        setOCDState(false);
+        gdb->disconnectFromRemote();//断开gdb
+        gdb->unloadSymbolFile();//卸载符号文件
+        setOCDState(false);//结束ocd进程
         ui->bt_conn->setText("连接目标");
         ui->bt_reset->setEnabled(false);//禁用复位按钮
         connected=false;//更新连接标志
@@ -253,96 +283,6 @@ void MainWindow::setOCDState(bool connect)
         killProcess.setNativeArguments(QString("/F /PID %1").arg(ocdProcess->pid()->dwProcessId));
         killProcess.start();
         killProcess.waitForFinished();
-    }
-}
-
-//参数true：运行gdb进程；参数false：结束gdb进程
-void MainWindow::setGDBState(bool run)
-{
-    if(run)
-    {
-        gdbProcess->setProgram(QCoreApplication::applicationDirPath()+"/gdb/gdb.exe");//设置程序路径
-        gdbProcess->setWorkingDirectory(QCoreApplication::applicationDirPath()+"/gdb");//设置工作路径
-        gdbProcess->setNativeArguments("-q");//设置gdb在安静模式下打开
-        gdbProcess->start();
-    }
-    else
-    {
-        gdbProcess->kill();
-    }
-}
-
-//参数true：gdb连接到本机3333端口，设置调试参数；参数false：断开gdb连接
-void MainWindow::setGDBConnState(bool connect)
-{
-    QString tmpFilePath=QCoreApplication::applicationDirPath()+"/gdb/tmp";//临时符号文件路径
-    if(connect)
-    {
-        gdbProcess->write("target remote localhost:3333\r\n");//连接到3333端口
-        QFile::remove(tmpFilePath);//确保删除当前的临时文件
-        QFile::copy(ui->txt_axf_path->text(),tmpFilePath);//将所选符号文件复制为临时文件
-        gdbProcess->write(QString("symbol-file %1 \r\n").arg("tmp").toStdString().c_str());//设置符号文件
-        gdbProcess->write("set confirm off\r\n");//设置不要手动确认
-        gdbProcess->write("set print pretty on\r\n");//设置结构体规范打印
-        setGDBDispList();//向gdb发送当前的变量列表
-    }
-    else
-    {
-        gdbProcess->write("symbol-file\r\n");//取消符号文件
-        gdbProcess->write("disconnect\r\n");//断开gdb连接
-        sleep(10);//确保对临时文件取消占用
-        QFile::remove(tmpFilePath);//删除复制过来的临时文件
-    }
-}
-
-//向gdb发送变量列表
-void MainWindow::setGDBDispList()
-{
-    gdbProcess->write("delete display\r\n");//删除之前发送的变量列表
-    foreach(VarInfo info,varList)
-        gdbProcess->write(QString("display %1 \r\n").arg(info.name).toStdString().c_str());//向display表中依次添加变量名
-}
-
-//向gdb请求读取所有变量，获取返回的原始字符串
-void MainWindow::getGDBRawDisp(QString &raw)
-{
-    if(!connected)
-        return;
-    gdbProcess->readAllStandardOutput();
-    gdbProcess->write("display\r\n");//向gdb发送display指令
-    raw="";
-    do{
-        gdbProcess->waitForReadyRead();
-        raw+=gdbProcess->readAllStandardOutput();
-    }while(!raw.endsWith("(gdb) "));//不断读取直到读到字符串"gdb "，表示指令执行完成
-}
-
-//解析由gdb返回的display原始字符串，更新变量值
-void MainWindow::parseGDBRawDisp(QString &raw)
-{
-    qint64 timestamp=stampTimer->nsecsElapsed()/1000;//获取时间戳
-
-    for(int index=0;index<varList.size();index++)//依次进行每个变量的匹配
-    {
-        VarInfo &info=varList[index];
-
-        QString regName="";
-        for(int i=0;i<info.name.length();i++)//将变量名每个转换为16进制格式，用于正则匹配
-            regName+=QString("\\x%1").arg(info.name.at(i).unicode(),0,16);
-
-        QRegExp rx(QString("\\d+:\\s%1\\s=\\s(.*)\\r\\n[\\d\\(]").arg(regName));//正则匹配模板，匹配选中的变量名并截取出变量值
-        rx.setMinimal(true);//使用非贪心模式
-
-        if(rx.indexIn(raw)!=-1)
-        {
-            info.rawValue=rx.cap(1);//正则中截取出的字符串即为变量当前值
-            SamplePoint sample;
-            if(getValueFromRaw(info.rawValue,sample.value))//尝试转换为double，生成采样点并写入采样点列表
-            {
-                sample.timestamp=timestamp;
-                info.samples.append(sample);
-            }
-        }
     }
 }
 
@@ -375,7 +315,7 @@ void MainWindow::on_bt_set_axf_clicked()
     QFileDialog *fileDialog = new QFileDialog(this);//弹出文件选择框
     fileDialog->setWindowTitle(QStringLiteral("选中文件"));
     fileDialog->setDirectory(".");
-    fileDialog->setNameFilter(tr("AXF/ELF File (*.axf *.elf)"));//设置文件过滤器为axf/elf
+    fileDialog->setNameFilters(QStringList()<<tr("AXF/ELF File (*.axf *.elf)")<<tr("所有文件 (*)"));//设置文件过滤器
     fileDialog->setFileMode(QFileDialog::ExistingFile);
     fileDialog->setViewMode(QFileDialog::Detail);
     if(fileDialog->exec())
@@ -425,26 +365,6 @@ void MainWindow::redrawTable()
     }
     int lastRow=varList.size();
     tableModel->setItem(lastRow,0,new QStandardItem(""));//末尾添加空行，用于用户添加变量
-}
-
-//发送gdb指令，修改变量值
-void MainWindow::setVar(const QString &name, double value)
-{
-    if(!connected)
-        return;
-    gdbProcess->write(QString("set %1=%2\r\n").arg(name).arg(value).toStdString().c_str());
-}
-
-//尝试从变量值原始字符串中解析出double值，返回是否解析成功
-bool MainWindow::getValueFromRaw(const QString &rawValue,double &value)
-{
-    if(rawValue.isEmpty())
-        return false;
-    if(rawValue.contains('{')||rawValue.contains('(')
-            ||rawValue.contains('<')||rawValue.contains('['))//若含有这些符号，表示该变量可能为复合类型，不能被解析
-        return false;
-    value=rawValue.mid(0,rawValue.indexOf(' ')).toDouble();
-    return true;
 }
 
 //保存配置到指定路径的文件
@@ -541,7 +461,7 @@ bool MainWindow::exportCSV(const QString &filename)
 void MainWindow::on_bt_reset_clicked()
 {
     if(connected)
-        gdbProcess->write("monitor reset\r\n");
+        gdb->runCmd("monitor reset\r\n");
 }
 
 //表格双击事件，进行图线颜色修改

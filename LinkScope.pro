@@ -19,6 +19,7 @@ DEFINES += QT_DEPRECATED_WARNINGS \
 
 SOURCES += \
     aboutwindow.cpp \
+    gdbprocess.cpp \
     graphwindow.cpp \
     helpwindow.cpp \
     listwindow.cpp \
@@ -27,6 +28,7 @@ SOURCES += \
 
 HEADERS += \
     aboutwindow.h \
+    gdbprocess.h \
     graphwindow.h \
     helpwindow.h \
     listwindow.h \
