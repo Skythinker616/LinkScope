@@ -25,6 +25,7 @@
 #include <qnetworkaccessmanager.h>
 #include <qnetworkreply.h>
 #include <gdbprocess.h>
+#include <openocd.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -41,7 +42,7 @@ public:
     void closeEvent(QCloseEvent *event);
 
 private slots:
-    void slotOCDErrorReady();
+    //void slotOCDErrorReady();
     void slotTableEdit(QModelIndex topleft, QModelIndex bottomright);
     void slotWatchTimerTrig();
     void slotTableTimerTrig();
@@ -68,6 +69,7 @@ private:
     Ui::MainWindow *ui;
     QProcess *ocdProcess;
     GDBProcess *gdb;//GDB进程控制
+    OpenOCD *openocd;//OpenOCD进程控制
     bool connected=false;//标记当前是否已连接
     QStandardItemModel *tableModel;//表格数据
     QList<VarInfo> varList;//变量列表
@@ -80,7 +82,7 @@ private:
     void checkUpdate();
     void setStylesheet();
     void setConnState(bool connect);
-    void setOCDState(bool connect);
+    //void setOCDState(bool connect);
     void sleep(uint32_t ms);
     void loadConfFileList();
     void initTable();

@@ -35,8 +35,11 @@ MainWindow::MainWindow(QWidget *parent)
     tableModel=new QStandardItemModel(this);//创建并初始化表格
     initTable();
 
-    ocdProcess=new QProcess(0);//创建openocd进程
-    connect(ocdProcess,SIGNAL(readyReadStandardError()),this,SLOT(slotOCDErrorReady()));
+    openocd=new OpenOCD();
+    connect(openocd,&OpenOCD::onErrorOccur,[=](const QString &info){//OpenOCD发生连接错误，断开连接并弹框
+        setConnState(false);
+        QMessageBox::information(this,"连接错误",info);
+    });
 
     gdb=new GDBProcess();//创建并启动GDB
     gdb->setTempSymbolFileName("tmp");//设定临时符号文件名
@@ -51,11 +54,12 @@ MainWindow::~MainWindow()
     {
         gdb->disconnectFromRemote();
         gdb->unloadSymbolFile();
+        openocd->stop();
     }
     gdb->stop();//结束gdb进程
     delete ui;
     delete tableModel;
-    delete ocdProcess;
+    delete openocd;
     delete gdb;
     delete stampTimer;
     delete watchTimer;
@@ -93,17 +97,6 @@ void MainWindow::closeEvent(QCloseEvent *event)
     Q_UNUSED(event);
     graph->close();
     listWindow->close();
-}
-
-//ocd进程发生错误，自动断开连接
-void MainWindow::slotOCDErrorReady()
-{
-    QString error=ocdProcess->readAllStandardError();
-    if(error.contains("Error:"))//错误信息中含有Error项，则直接断开连接并弹出提示
-    {
-        setConnState(false);
-        QMessageBox::information(this,"连接错误",error);
-    }
 }
 
 //表格被编辑，添加变量或修改变量值
@@ -223,9 +216,9 @@ void MainWindow::setConnState(bool connect)
     if(connect)//进行连接
     {
         ui->bt_conn->setEnabled(false);//先禁用连接按钮，防止多次点击
-        setOCDState(true);//运行openocd进程进行目标连接
+        openocd->start(ui->cb_interface->currentText(),ui->cb_target->currentText(),3333);//运行openocd进程进行目标连接
         sleep(500);//等待500ms
-        if(ocdProcess->state()==QProcess::Running)//若ocd成功启动
+        if(openocd->isRunning())//若ocd成功启动
         {
             gdb->loadSymbolFile(ui->txt_axf_path->text());//设置gdb符号文件
             gdb->connectToRemote("localhost:3333");//连接gdb到ocd
@@ -254,35 +247,10 @@ void MainWindow::setConnState(bool connect)
         tableTimer->stop();
         gdb->disconnectFromRemote();//断开gdb
         gdb->unloadSymbolFile();//卸载符号文件
-        setOCDState(false);//结束ocd进程
+        openocd->stop();
         ui->bt_conn->setText("连接目标");
         ui->bt_reset->setEnabled(false);//禁用复位按钮
         connected=false;//更新连接标志
-    }
-}
-
-//参数true：运行ocd进程并连接目标；参数false：结束ocd进程
-void MainWindow::setOCDState(bool connect)
-{
-    if(connect)
-    {
-        ocdProcess->setWorkingDirectory(QCoreApplication::applicationDirPath()+"/openocd/bin");//设置工作路径
-        ocdProcess->setProgram(QCoreApplication::applicationDirPath()+"/openocd/bin/openocd.exe");//设置程序路径
-        ocdProcess->setNativeArguments(
-                    QString("-f interface/%1 -f target/%2")
-                    .arg(ui->cb_interface->currentText())
-                    .arg(ui->cb_target->currentText()));//设置参数为所选的调试器和目标芯片
-        ocdProcess->start();
-    }
-    else
-    {
-        if(ocdProcess->state()==QProcess::NotRunning)
-            return;
-        QProcess killProcess(0);//创建新进程，用taskkill强行结束ocd进程
-        killProcess.setProgram("taskkill");
-        killProcess.setNativeArguments(QString("/F /PID %1").arg(ocdProcess->pid()->dwProcessId));
-        killProcess.start();
-        killProcess.waitForFinished();
     }
 }
 

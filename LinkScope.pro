@@ -24,7 +24,8 @@ SOURCES += \
     helpwindow.cpp \
     listwindow.cpp \
     main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    openocd.cpp
 
 HEADERS += \
     aboutwindow.h \
@@ -33,6 +34,7 @@ HEADERS += \
     helpwindow.h \
     listwindow.h \
     mainwindow.h \
+    openocd.h \
     vartype.h
 
 FORMS += \
