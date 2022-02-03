@@ -47,6 +47,7 @@ void ListWindow::parseVarChildren(VarNode &node)
     if(node.parent==NULL)//传入的是根节点
     {
         QString rawVarList=gdb->runCmd("info variables\r\n");//使用info variables指令列出axf中所有变量
+        gdb->removeInnerSection(rawVarList,0);//移除内部直接嵌套的部分
         QStringList varList=gdb->getVarListFromRawOutput(rawVarList);//解析出变量列表
         foreach(QString name,varList)//依次添加子节点并更新可展开状态
         {
@@ -80,7 +81,7 @@ void ListWindow::parseVarChildren(VarNode &node)
             QString detailRawVarType=gdb->runCmd(QString("ptype %1\r\n").arg(fullName));//用ptype指令获取详细类型
             detailRawVarType.remove("type = ");
             detailRawVarType.remove("\r\n(gdb) ");
-            if(detailRawVarType.startsWith("struct")||detailRawVarType.startsWith("union"))//判定为可展开类型
+            if(detailRawVarType.startsWith("struct")||detailRawVarType.startsWith("union")||detailRawVarType.startsWith("class"))//判定为可展开类型
             {
                 gdb->removeInnerSection(detailRawVarType,detailRawVarType.indexOf('{')+1);//移除内部直接嵌套的部分
                 QStringList varList=gdb->getVarListFromRawOutput(detailRawVarType);//解析出变量列表

@@ -26,6 +26,7 @@
 #include <qnetworkreply.h>
 #include <gdbprocess.h>
 #include <openocd.h>
+#include <serialocd.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -42,12 +43,12 @@ public:
     void closeEvent(QCloseEvent *event);
 
 private slots:
-    //void slotOCDErrorReady();
     void slotTableEdit(QModelIndex topleft, QModelIndex bottomright);
     void slotWatchTimerTrig();
     void slotTableTimerTrig();
     void slotOnVarAdd2Edit(const QString &name);
     void slotOnVarAdd2List(const QString &name);
+    void slotOnConnErrorOccur(const QString &info);
     void on_bt_conn_clicked();
     void on_bt_set_axf_clicked();
     void on_bt_reset_clicked();
@@ -64,12 +65,16 @@ private slots:
     void on_action_show_selector_triggered();
     void on_action_feedback_triggered();
     void on_action_checkupdate_triggered();
+    void on_rb_openocd_toggled(bool checked);
+    void on_rb_serialocd_toggled(bool checked);
+    void on_bt_refresh_serial_clicked();
 
 private:
     Ui::MainWindow *ui;
     QProcess *ocdProcess;
     GDBProcess *gdb;//GDB进程控制
     OpenOCD *openocd;//OpenOCD进程控制
+    SerialOCD *serialocd;//串口ocd控制
     bool connected=false;//标记当前是否已连接
     QStandardItemModel *tableModel;//表格数据
     QList<VarInfo> varList;//变量列表
@@ -82,7 +87,6 @@ private:
     void checkUpdate();
     void setStylesheet();
     void setConnState(bool connect);
-    //void setOCDState(bool connect);
     void sleep(uint32_t ms);
     void loadConfFileList();
     void initTable();

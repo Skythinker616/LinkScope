@@ -6,6 +6,8 @@
 #include <qcoreapplication.h>
 #include <qfile.h>
 #include <qregexp.h>
+#include <qdebug.h>
+#include <QTime>
 
 class GDBProcess : public QObject
 {

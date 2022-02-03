@@ -36,14 +36,14 @@ MainWindow::MainWindow(QWidget *parent)
     initTable();
 
     openocd=new OpenOCD();
-    connect(openocd,&OpenOCD::onErrorOccur,[=](const QString &info){//OpenOCD发生连接错误，断开连接并弹框
-        setConnState(false);
-        QMessageBox::information(this,"连接错误",info);
-    });
+    connect(openocd,&OpenOCD::onErrorOccur,this,&MainWindow::slotOnConnErrorOccur,Qt::QueuedConnection);
+
+    serialocd=new SerialOCD();
+    connect(serialocd,&SerialOCD::onErrorOccur,this,&MainWindow::slotOnConnErrorOccur,Qt::QueuedConnection);
 
     gdb=new GDBProcess();//创建并启动GDB
     gdb->setTempSymbolFileName("tmp");//设定临时符号文件名
-    gdb->start();
+    gdb->start();//启动gdb进程
 
     loadConfFileList();//从openocd文件夹中读取配置文件列表
 }
@@ -54,7 +54,10 @@ MainWindow::~MainWindow()
     {
         gdb->disconnectFromRemote();
         gdb->unloadSymbolFile();
-        openocd->stop();
+        if(ui->rb_openocd->isChecked())
+            openocd->stop();
+        else if(ui->rb_serialocd->isChecked())
+            serialocd->stopConnect();
     }
     gdb->stop();//结束gdb进程
     delete ui;
@@ -65,6 +68,7 @@ MainWindow::~MainWindow()
     delete watchTimer;
     delete tableTimer;
     delete graph;
+    delete listWindow;
 }
 
 //按键事件，监听DEL键按下，用于删除单个变量
@@ -85,6 +89,14 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
                 {
                     varList.removeAt(index);
                     redrawTable();
+
+                    if(connected)//若正在连接状态则向gdb发送新的变量列表
+                    {
+                        QStringList nameList;
+                        for(int index=0;index<varList.size();index++)
+                            nameList<<varList.at(index).name;
+                        gdb->setDisplayList(nameList);
+                    }
                 }
             }
         }
@@ -195,6 +207,14 @@ void MainWindow::slotOnVarAdd2List(const QString &name)
     editItem->setText(name);//在编辑框中填入变量名，会直接添加到列表中
 }
 
+//发生连接错误时的槽函数
+void MainWindow::slotOnConnErrorOccur(const QString &info)
+{
+    if(connected)
+        setConnState(false);
+    QMessageBox::information(this,"连接错误",info);
+}
+
 //连接按钮点击，触发连接状态切换
 void MainWindow::on_bt_conn_clicked()
 {
@@ -216,9 +236,32 @@ void MainWindow::setConnState(bool connect)
     if(connect)//进行连接
     {
         ui->bt_conn->setEnabled(false);//先禁用连接按钮，防止多次点击
-        openocd->start(ui->cb_interface->currentText(),ui->cb_target->currentText(),3333);//运行openocd进程进行目标连接
-        sleep(500);//等待500ms
-        if(openocd->isRunning())//若ocd成功启动
+
+        bool ocdStartSuccess=false;
+
+        if(ui->rb_openocd->isChecked())//选择的是OpenOCD模式
+        {
+            openocd->start(ui->cb_interface->currentText(),ui->cb_target->currentText(),3333);//运行openocd进程进行目标连接
+            sleep(500);//等待500ms
+            if(openocd->isRunning())
+                ocdStartSuccess=true;
+        }
+        else if(ui->rb_serialocd->isChecked())//选择的是串口模式
+        {
+            if(!ui->cb_com->currentText().isEmpty())
+            {
+                serialocd->startConnect(ui->cb_com->currentText(),3333);//启动SerialOCD
+                sleep(500);
+                if(serialocd->isRunning())
+                    ocdStartSuccess=true;
+            }
+            else
+            {
+                QMessageBox::information(this,"连接错误","请先选择串口号");
+            }
+        }
+
+        if(ocdStartSuccess)//若ocd成功启动
         {
             gdb->loadSymbolFile(ui->txt_axf_path->text());//设置gdb符号文件
             gdb->connectToRemote("localhost:3333");//连接gdb到ocd
@@ -236,6 +279,8 @@ void MainWindow::setConnState(bool connect)
 
             ui->bt_conn->setText("断开连接");
             ui->bt_reset->setEnabled(true);//使能复位按钮
+            ui->rb_openocd->setEnabled(false);//失能连接方式选择
+            ui->rb_serialocd->setEnabled(false);
 
             connected=true;//更新连接标志
         }
@@ -247,9 +292,14 @@ void MainWindow::setConnState(bool connect)
         tableTimer->stop();
         gdb->disconnectFromRemote();//断开gdb
         gdb->unloadSymbolFile();//卸载符号文件
-        openocd->stop();
+        if(ui->rb_openocd->isChecked())//根据连接方式选择结束ocd
+            openocd->stop();
+        else if(ui->rb_serialocd->isChecked())
+            serialocd->stopConnect();
         ui->bt_conn->setText("连接目标");
         ui->bt_reset->setEnabled(false);//禁用复位按钮
+        ui->rb_openocd->setEnabled(true);//使能连接方式选择
+        ui->rb_serialocd->setEnabled(true);
         connected=false;//更新连接标志
     }
 }
@@ -342,6 +392,8 @@ void MainWindow::saveToFile(const QString &filename)
     settings.setIniCodec("GBK");
 
     settings.beginGroup("Global");//写入全局配置
+    settings.setValue("OpenocdMode",ui->rb_openocd->isChecked());
+    settings.setValue("SerialocdMode",ui->rb_serialocd->isChecked());
     settings.setValue("Interface",ui->cb_interface->currentText());
     settings.setValue("Target",ui->cb_target->currentText());
     settings.setValue("AxfChosen",axfChosen);
@@ -367,6 +419,8 @@ void MainWindow::loadFromFile(const QString &filename)
     settings.setIniCodec("GBK");
 
     settings.beginGroup("Global");//读取全局配置
+    ui->rb_openocd->setChecked(settings.value("OpenocdMode",true).toBool());
+    ui->rb_serialocd->setChecked(settings.value("SerialocdMode",false).toBool());
     ui->cb_interface->setCurrentText(settings.value("Interface").toString());
     ui->cb_target->setCurrentText(settings.value("Target").toString());
     axfChosen=settings.value("AxfChosen",true).toBool();
@@ -652,4 +706,23 @@ void MainWindow::checkUpdate()
 void MainWindow::on_action_checkupdate_triggered()
 {
     checkUpdate();
+}
+
+//调试器模式选择切换
+void MainWindow::on_rb_openocd_toggled(bool checked)
+{
+    ui->box_openocd->setEnabled(checked);
+}
+
+//串口模式选择切换
+void MainWindow::on_rb_serialocd_toggled(bool checked)
+{
+    ui->box_serial->setEnabled(checked);
+}
+
+//刷新串口点击
+void MainWindow::on_bt_refresh_serial_clicked()
+{
+    ui->cb_com->clear();
+    ui->cb_com->addItems(serialocd->getSerialList());
 }

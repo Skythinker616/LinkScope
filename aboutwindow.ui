@@ -91,7 +91,7 @@
       </sizepolicy>
      </property>
      <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;hr width=&quot;300&quot;/&gt;&lt;p align=&quot;center&quot;&gt;版本号：V1.0.2&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;更新时间：2022/1/29&lt;/p&gt;&lt;hr width=&quot;300&quot;/&gt;&lt;p align=&quot;center&quot;&gt;Developed by Skythinker&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;hr width=&quot;300&quot;/&gt;&lt;p align=&quot;center&quot;&gt;版本号：V1.1.0&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;更新时间：2022/2/3&lt;/p&gt;&lt;hr width=&quot;300&quot;/&gt;&lt;p align=&quot;center&quot;&gt;Developed by Skythinker&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
     </widget>
    </item>

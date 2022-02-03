@@ -17,7 +17,7 @@ QString GDBProcess::runCmd(const QString &cmd)
     process->write(cmd.toStdString().c_str());
     QString res="";
     do{
-        process->waitForReadyRead();
+        process->waitForReadyRead(2);
         res+=process->readAllStandardOutput();
     }while(!res.endsWith("(gdb) "));
     return res;
@@ -29,7 +29,7 @@ void GDBProcess::start()
     process->setProgram(QCoreApplication::applicationDirPath()+"/gdb/gdb.exe");//设置程序路径
     process->setWorkingDirectory(QCoreApplication::applicationDirPath()+"/gdb");//设置工作路径
     process->setNativeArguments("-q");//设置gdb在安静模式下打开
-    process->start();
+    process->start();//QProcess::Unbuffered|QProcess::ReadWrite);
     runCmd("set confirm off\r\n");//设置不要手动确认
     runCmd("set print pretty on\r\n");//设置结构体规范打印
 }
@@ -130,7 +130,7 @@ bool GDBProcess::checkExpandableType(const QString &varFullName)
         return false;
     QString ptype=runCmd(QString("ptype %1\r\n").arg(varFullName));//再使用ptype指令判断是否是其他可展开类型
     ptype.remove("type = ");
-    if(ptype.startsWith("struct")||ptype.startsWith("union"))
+    if(ptype.startsWith("struct")||ptype.startsWith("union")||ptype.startsWith("class"))
         return true;
     return false;
 }
@@ -139,7 +139,7 @@ bool GDBProcess::checkExpandableType(const QString &varFullName)
 QStringList GDBProcess::getVarListFromRawOutput(const QString &rawVarList)
 {
     QStringList list;
-    QRegExp rootRx("\\s([^ (]*\\(\\*|)([^ )]+)(\\)\\(.*\\)|\\s:\\s\\d+|);");//正则匹配模板
+    QRegExp rootRx("\\s([^ (]*\\(\\*|)([^ ):]+)(\\)\\(.*\\)|\\s:\\s\\d+|);");//正则匹配模板
     rootRx.setMinimal(true);//非贪心匹配
     int pos=0;
     while((pos=rootRx.indexIn(rawVarList,pos))!=-1)
@@ -149,7 +149,8 @@ QStringList GDBProcess::getVarListFromRawOutput(const QString &rawVarList)
             name.remove('*');
         if(name.contains('['))//手动剔除数组长度部分
             name.remove(QRegExp("\\[\\d+\\]"));
-        list.append(name);
+        if(name!="const")//排除解析出来是保留字的情况
+            list.append(name);
         pos+=rootRx.matchedLength();
     }
     return list;

@@ -1,5 +1,6 @@
 QT       += core gui
 QT       += network
+QT       += serialport
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -10,7 +11,7 @@ CONFIG += c++11
 # depend on your compiler). Please consult the documentation of the
 # deprecated API in order to know how to port your code away from it.
 DEFINES += QT_DEPRECATED_WARNINGS \
-    APP_VERSION=\\\"1.0.2\\\"
+    APP_VERSION=\\\"1.1.0\\\"
 
 # You can also make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
@@ -25,7 +26,8 @@ SOURCES += \
     listwindow.cpp \
     main.cpp \
     mainwindow.cpp \
-    openocd.cpp
+    openocd.cpp \
+    serialocd.cpp
 
 HEADERS += \
     aboutwindow.h \
@@ -35,6 +37,7 @@ HEADERS += \
     listwindow.h \
     mainwindow.h \
     openocd.h \
+    serialocd.h \
     vartype.h
 
 FORMS += \
