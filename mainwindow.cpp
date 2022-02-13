@@ -383,6 +383,7 @@ void MainWindow::redrawTable()
     }
     int lastRow=varList.size();
     tableModel->setItem(lastRow,0,new QStandardItem(""));//末尾添加空行，用于用户添加变量
+    ui->tb_var->resizeColumnsToContents();//根据表格内容自动调整列宽
 }
 
 //保存配置到指定路径的文件
