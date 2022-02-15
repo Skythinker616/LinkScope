@@ -352,12 +352,15 @@ void MainWindow::initTable()
 {
     redrawTable();
     connect(tableModel,SIGNAL(dataChanged(QModelIndex,QModelIndex)),this,SLOT(slotTableEdit(QModelIndex,QModelIndex)));
-    ui->tb_var->setModel(tableModel);
+    ui->tb_var->setModel(tableModel);//绑定表格model
+    ui->tb_var->horizontalHeader()->setMinimumSectionSize(150);//设置最小列宽150
 }
 
 //重绘表格，设置表头并添加各变量信息
 void MainWindow::redrawTable()
 {
+    QByteArray horiHeaderState=ui->tb_var->horizontalHeader()->saveState();//读出列宽数据
+
     tableModel->clear();
     tableModel->setColumnCount(5);//设置表格为5列
     tableModel->setHeaderData(0,Qt::Horizontal,"变量名");//设置表头
@@ -383,7 +386,9 @@ void MainWindow::redrawTable()
     }
     int lastRow=varList.size();
     tableModel->setItem(lastRow,0,new QStandardItem(""));//末尾添加空行，用于用户添加变量
-    ui->tb_var->resizeColumnsToContents();//根据表格内容自动调整列宽
+
+    ui->tb_var->horizontalHeader()->restoreState(horiHeaderState);//恢复列宽数据
+    ui->tb_var->resizeColumnToContents(0);//根据第一列内容自动调整列宽
 }
 
 //保存配置到指定路径的文件
@@ -393,6 +398,7 @@ void MainWindow::saveToFile(const QString &filename)
     settings.setIniCodec("GBK");
 
     settings.beginGroup("Global");//写入全局配置
+    settings.setValue("HoriHeader",ui->tb_var->horizontalHeader()->saveState());
     settings.setValue("OpenocdMode",ui->rb_openocd->isChecked());
     settings.setValue("SerialocdMode",ui->rb_serialocd->isChecked());
     settings.setValue("Interface",ui->cb_interface->currentText());
@@ -420,6 +426,8 @@ void MainWindow::loadFromFile(const QString &filename)
     settings.setIniCodec("GBK");
 
     settings.beginGroup("Global");//读取全局配置
+    if(settings.contains("HoriHeader"))
+        ui->tb_var->horizontalHeader()->restoreState(settings.value("HoriHeader").toByteArray());
     ui->rb_openocd->setChecked(settings.value("OpenocdMode",true).toBool());
     ui->rb_serialocd->setChecked(settings.value("SerialocdMode",false).toBool());
     ui->cb_interface->setCurrentText(settings.value("Interface").toString());

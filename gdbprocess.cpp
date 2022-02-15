@@ -17,7 +17,7 @@ QString GDBProcess::runCmd(const QString &cmd)
     process->write(cmd.toStdString().c_str());
     QString res="";
     do{
-        process->waitForReadyRead(2);
+        process->waitForReadyRead(0);
         res+=process->readAllStandardOutput();
     }while(!res.endsWith("(gdb) "));
     return res;
