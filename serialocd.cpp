@@ -236,8 +236,6 @@ void SerialOCD::sendSerialReadMem(int addr, int len)
 {
     if(port->isOpen())
     {
-        if(len>8)//最多一次性读取8个字节
-            len=8;
         QByteArray arr;
         arr.resize(8);
         arr[0]=DEBUG_FRAME_HEADER;

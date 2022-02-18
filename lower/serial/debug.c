@@ -89,6 +89,8 @@ void Debug_ParseBuffer()
 			if(cmd==SerialCMD_ReadMem) //若要读取内存数据
 			{
 				uint8_t byteNum=DEBUG_QUEUE_AT(3); //要读取的字节数
+				if(byteNum>DEBUG_TXBUF_SIZE-3) //限制读取的字节数不能使帧长超过发送缓冲区大小
+					byteNum=DEBUG_TXBUF_SIZE-3;
 				uint32_t addr=0; //计算目标地址
 				for(uint8_t i=0;i<4;i++)
 					addr|=((uint32_t)DEBUG_QUEUE_AT(4+i))<<(i*8);

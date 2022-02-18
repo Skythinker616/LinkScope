@@ -137,7 +137,7 @@ QMenu{
 
 QMenu:item{
 	background-color: white;
-	padding: 8px 15px;
+	padding: 8px 30px;
 }
 
 QMenu::item:selected{

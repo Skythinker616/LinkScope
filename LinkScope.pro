@@ -11,7 +11,7 @@ CONFIG += c++11
 # depend on your compiler). Please consult the documentation of the
 # deprecated API in order to know how to port your code away from it.
 DEFINES += QT_DEPRECATED_WARNINGS \
-    APP_VERSION=\\\"1.1.0\\\"
+    APP_VERSION=\\\"1.2.0\\\"
 
 # You can also make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
@@ -24,6 +24,7 @@ SOURCES += \
     graphwindow.cpp \
     helpwindow.cpp \
     listwindow.cpp \
+    logwindow.cpp \
     main.cpp \
     mainwindow.cpp \
     openocd.cpp \
@@ -35,6 +36,7 @@ HEADERS += \
     graphwindow.h \
     helpwindow.h \
     listwindow.h \
+    logwindow.h \
     mainwindow.h \
     openocd.h \
     serialocd.h \
@@ -45,6 +47,7 @@ FORMS += \
     graphwindow.ui \
     helpwindow.ui \
     listwindow.ui \
+    logwindow.ui \
     mainwindow.ui
 
 RC_ICONS = icon.ico

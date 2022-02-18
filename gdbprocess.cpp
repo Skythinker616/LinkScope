@@ -17,7 +17,7 @@ QString GDBProcess::runCmd(const QString &cmd)
     process->write(cmd.toStdString().c_str());
     QString res="";
     do{
-        process->waitForReadyRead(0);
+        process->waitForReadyRead(1);
         res+=process->readAllStandardOutput();
     }while(!res.endsWith("(gdb) "));
     return res;
@@ -110,6 +110,34 @@ bool GDBProcess::getDoubleFromDisplayValue(const QString &rawValue, double &resu
         return false;
     result=rawValue.mid(0,rawValue.indexOf(' ')).toDouble();
     return true;
+}
+
+//将gdb所返回的无符号数组变量值转换为uint数组
+QList<uint> GDBProcess::getUintArrayFromDisplay(const QString &rawDisplay)
+{
+    QRegExp rx("\\{(.*)\\}");
+    rx.indexIn(rawDisplay);
+    QString raw=rx.cap(1);
+    raw=raw.replace("\r\n  ","");
+    QStringList rawList=raw.split(", ");
+    QList<uint> numList;
+    for(int index=0;index<rawList.size();index++)
+    {
+        if(rawList[index].contains('<'))//查找并展开重复值
+        {
+            QRegExp repeatRx("(\\d+)\\s<repeats\\s(\\d+)\\stimes>");
+            repeatRx.indexIn(rawList[index]);
+            int num=repeatRx.cap(1).toUInt();
+            int times=repeatRx.cap(2).toUInt();
+            for(int i=0;i<times;i++)
+                numList<<num;
+        }
+        else
+        {
+            numList<<rawList[index].toUInt();
+        }
+    }
+    return numList;
 }
 
 //命令GDB设定变量值

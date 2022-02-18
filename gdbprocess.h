@@ -26,6 +26,7 @@ public:
     void setDisplayList(QStringList &list);
     QString captureValueFromDisplay(const QString &rawDisplay,const QString &name);
     bool getDoubleFromDisplayValue(const QString &rawValue,double &result);
+    QList<uint> getUintArrayFromDisplay(const QString &rawDisplay);
     void setVarValue(const QString &varFullName,double value);
     bool checkExpandableType(const QString &varFullName);
     QStringList getVarListFromRawOutput(const QString &rawVarList);

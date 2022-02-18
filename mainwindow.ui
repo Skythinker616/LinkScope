@@ -159,6 +159,13 @@
            </property>
           </widget>
          </item>
+         <item>
+          <widget class="QCheckBox" name="cb_log">
+           <property name="text">
+            <string>监视日志</string>
+           </property>
+          </widget>
+         </item>
         </layout>
        </widget>
       </item>
@@ -246,6 +253,7 @@
     </property>
     <addaction name="action_show_graph"/>
     <addaction name="action_show_selector"/>
+    <addaction name="action_show_log"/>
    </widget>
    <addaction name="menu"/>
    <addaction name="menu_3"/>
@@ -278,8 +286,11 @@
    </property>
   </action>
   <action name="action_show_graph">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="text">
-    <string>显示绘图窗口</string>
+    <string>绘图窗口</string>
    </property>
   </action>
   <action name="action_refresh_conf">
@@ -296,8 +307,11 @@
    </property>
   </action>
   <action name="action_show_selector">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="text">
-    <string>显示选择窗口</string>
+    <string>选择窗口</string>
    </property>
   </action>
   <action name="action_feedback">
@@ -308,6 +322,14 @@
   <action name="action_checkupdate">
    <property name="text">
     <string>检查更新</string>
+   </property>
+  </action>
+  <action name="action_show_log">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>日志窗口</string>
    </property>
   </action>
  </widget>

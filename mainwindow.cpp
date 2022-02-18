@@ -10,20 +10,26 @@ MainWindow::MainWindow(QWidget *parent)
 
     setStylesheet();//设置全局样式表
 
-    graph=new GraphWindow();//创建并显示绘图窗口
+    graph=new GraphWindow();//创建绘图窗口
     graph->setVarList(&varList);
-    graph->show();
+    connect(ui->action_show_graph,&QAction::toggled,this,[=](bool checked){graph->setHidden(!checked);});//绑定菜单项到窗口开关
+    connect(graph,&QDialog::rejected,this,[=]{ui->action_show_graph->setChecked(false);});//当窗口关闭时取消勾选菜单
 
-    listWindow=new ListWindow();
-    listWindow->show();
+    listWindow=new ListWindow();//创建选择窗口
     connect(listWindow,SIGNAL(add2Edit(const QString &)),this,SLOT(slotOnVarAdd2Edit(const QString &)));
     connect(listWindow,SIGNAL(add2List(const QString &)),this,SLOT(slotOnVarAdd2List(const QString &)));
+    connect(ui->action_show_selector,&QAction::toggled,this,[=](bool checked){listWindow->setHidden(!checked);});
+    connect(listWindow,&QDialog::rejected,this,[=]{ui->action_show_selector->setChecked(false);});
+
+    logWindow=new LogWindow();//创建日志窗口
+    connect(ui->action_show_log,&QAction::toggled,this,[=](bool checked){logWindow->setHidden(!checked);});
+    connect(logWindow,&QDialog::rejected,this,[=]{ui->action_show_log->setChecked(false);});
 
     stampTimer=new QElapsedTimer();//创建并运行时间戳定时器
     stampTimer->start();
 
     watchTimer=new QTimer(this);//创建watch定时器
-    watchTimer->setInterval(10);
+    watchTimer->setInterval(0);
     watchTimer->stop();
     connect(watchTimer,SIGNAL(timeout()),this,SLOT(slotWatchTimerTrig()));
 
@@ -32,13 +38,18 @@ MainWindow::MainWindow(QWidget *parent)
     tableTimer->stop();
     connect(tableTimer,SIGNAL(timeout()),this,SLOT(slotTableTimerTrig()));
 
+    logTimer=new QTimer(this);//创建日志监视定时器
+    logTimer->setInterval(100);
+    logTimer->stop();
+    connect(logTimer,SIGNAL(timeout()),this,SLOT(slotLogTimerTrig()));
+
     tableModel=new QStandardItemModel(this);//创建并初始化表格
     initTable();
 
-    openocd=new OpenOCD();
+    openocd=new OpenOCD();//创建OpenOCD对象并连接错误处理槽
     connect(openocd,&OpenOCD::onErrorOccur,this,&MainWindow::slotOnConnErrorOccur,Qt::QueuedConnection);
 
-    serialocd=new SerialOCD();
+    serialocd=new SerialOCD();//创建SerialOCD对象并连接错误处理槽
     connect(serialocd,&SerialOCD::onErrorOccur,this,&MainWindow::slotOnConnErrorOccur,Qt::QueuedConnection);
 
     gdb=new GDBProcess();//创建并启动GDB
@@ -46,6 +57,7 @@ MainWindow::MainWindow(QWidget *parent)
     gdb->start();//启动gdb进程
 
     loadConfFileList();//从openocd文件夹中读取配置文件列表
+    loadGlobalConf();//加载软件全局配置
 }
 
 MainWindow::~MainWindow()
@@ -67,8 +79,10 @@ MainWindow::~MainWindow()
     delete stampTimer;
     delete watchTimer;
     delete tableTimer;
+    delete logTimer;
     delete graph;
     delete listWindow;
+    delete logWindow;
 }
 
 //按键事件，监听DEL键按下，用于删除单个变量
@@ -91,24 +105,21 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
                     redrawTable();
 
                     if(connected)//若正在连接状态则向gdb发送新的变量列表
-                    {
-                        QStringList nameList;
-                        for(int index=0;index<varList.size();index++)
-                            nameList<<varList.at(index).name;
-                        gdb->setDisplayList(nameList);
-                    }
+                        updateGDBList();
                 }
             }
         }
     }
 }
 
-//窗口关闭事件，在主窗口关闭时自动关闭绘图窗口以退出程序
+//窗口关闭事件，处理软件退出
 void MainWindow::closeEvent(QCloseEvent *event)
 {
     Q_UNUSED(event);
-    graph->close();
+    saveGlobalConf();//保存软件全局设置
+    graph->close();//关闭各窗口，退出软件
     listWindow->close();
+    logWindow->close();
 }
 
 //表格被编辑，添加变量或修改变量值
@@ -130,12 +141,7 @@ void MainWindow::slotTableEdit(QModelIndex topleft, QModelIndex bottomright)
             redrawTable();//重绘表格
 
             if(connected)//若正在连接状态则向gdb发送新的变量列表
-            {
-                QStringList nameList;
-                for(int index=0;index<varList.size();index++)
-                    nameList<<varList.at(index).name;
-                gdb->setDisplayList(nameList);
-            }
+                updateGDBList();
         }
     }
     else if(topleft.column()==2 && topleft.row()!=varList.size())//若编辑的是第二列，表示需进行变量值修改
@@ -188,6 +194,28 @@ void MainWindow::slotTableTimerTrig()
         {
             item->setBackground(QBrush(QColor(Qt::white)));//若不发生变化则设置单元格背景为白色
         }
+    }
+}
+
+//日志监视定时器触发，获取并解析日志信息
+void MainWindow::slotLogTimerTrig()
+{
+    const QString cmd="print/u logQueue.size>0?(logQueue.size--,logQueue.startPos=(logQueue.startPos+1)%logQueue.maxSize,*logQueue.buf[logQueue.startPos]@logQueue.lenBuf[logQueue.startPos]):{0}\r\n";
+    QString raw=gdb->runCmd(cmd);//命令GDB从下位机出队一条日志
+    QList<uint> numList=gdb->getUintArrayFromDisplay(raw);//从日志中解析缓冲区数组内容
+    if(numList.size()>1)
+    {
+        char attr=numList.at(0);//日志属性字符
+        QStringList logList;//将缓冲区数组数据拆分成几个字符串
+        logList<<""<<""<<""<<"";
+        for(int pos=1,strNum=0; pos<numList.size() && strNum<logList.size(); pos++)
+        {
+            if(numList[pos]==0)
+                strNum++;
+            else
+                logList[strNum].append(numList[pos]);
+        }
+        logWindow->addLog(attr,logList[0],logList[1],logList[2].toULongLong(),logList[3]);//向日志窗口添加一条日志
     }
 }
 
@@ -265,10 +293,7 @@ void MainWindow::setConnState(bool connect)
         {
             gdb->loadSymbolFile(ui->txt_axf_path->text());//设置gdb符号文件
             gdb->connectToRemote("localhost:3333");//连接gdb到ocd
-            QStringList nameList;
-            for(int index=0;index<varList.size();index++)//向gdb发送变量列表
-                nameList<<varList.at(index).name;
-            gdb->setDisplayList(nameList);
+            updateGDBList();//向gdb发送变量列表
 
             for(int i=0;i<varList.size();i++)//清空变量列表历史采样点数据
                 varList[i].samples.clear();
@@ -276,6 +301,10 @@ void MainWindow::setConnState(bool connect)
             stampTimer->restart();//开启时间戳计时
             watchTimer->start();//开启定时查看变量值
             tableTimer->start();//开启表格定时刷新
+
+            if(ui->cb_log->isChecked())//开启日志监视定时器
+                logTimer->start();
+            logWindow->clearLog();//清空日志列表
 
             ui->bt_conn->setText("断开连接");
             ui->bt_reset->setEnabled(true);//使能复位按钮
@@ -290,6 +319,8 @@ void MainWindow::setConnState(bool connect)
     {
         watchTimer->stop();//停止定时查看和定时刷新表格
         tableTimer->stop();
+        if(ui->cb_log->isChecked())//停止日志监视定时器
+            logTimer->stop();
         gdb->disconnectFromRemote();//断开gdb
         gdb->unloadSymbolFile();//卸载符号文件
         if(ui->rb_openocd->isChecked())//根据连接方式选择结束ocd
@@ -366,7 +397,7 @@ void MainWindow::redrawTable()
     tableModel->setHeaderData(0,Qt::Horizontal,"变量名");//设置表头
     tableModel->setHeaderData(1,Qt::Horizontal,"当前值");
     tableModel->setHeaderData(2,Qt::Horizontal,"修改变量");
-    tableModel->setHeaderData(3,Qt::Horizontal,"使能绘图");
+    tableModel->setHeaderData(3,Qt::Horizontal,"显示图像");
     tableModel->setHeaderData(4,Qt::Horizontal,"图线颜色");
 
     for(int i=0;i<varList.size();i++)//依次添加各变量信息
@@ -391,6 +422,15 @@ void MainWindow::redrawTable()
     ui->tb_var->resizeColumnToContents(0);//根据第一列内容自动调整列宽
 }
 
+//更新GDB的display列表
+void MainWindow::updateGDBList()
+{
+    QStringList nameList;
+    for(int index=0;index<varList.size();index++)
+        nameList<<varList.at(index).name;
+    gdb->setDisplayList(nameList);
+}
+
 //保存配置到指定路径的文件
 void MainWindow::saveToFile(const QString &filename)
 {
@@ -405,6 +445,7 @@ void MainWindow::saveToFile(const QString &filename)
     settings.setValue("Target",ui->cb_target->currentText());
     settings.setValue("AxfChosen",axfChosen);
     settings.setValue("AxfPath",ui->txt_axf_path->text());
+    settings.setValue("LogEnabled",ui->cb_log->isChecked());
     settings.setValue("VarNum",varList.size());
     settings.endGroup();
 
@@ -434,6 +475,7 @@ void MainWindow::loadFromFile(const QString &filename)
     ui->cb_target->setCurrentText(settings.value("Target").toString());
     axfChosen=settings.value("AxfChosen",true).toBool();
     ui->txt_axf_path->setText(settings.value("AxfPath").toString());
+    ui->cb_log->setChecked(settings.value("LogEnabled",false).toBool());
     int varNum=settings.value("VarNum").toInt();
     settings.endGroup();
 
@@ -486,6 +528,28 @@ bool MainWindow::exportCSV(const QString &filename)
     }
 
     return true;
+}
+
+//读取全局配置
+void MainWindow::loadGlobalConf()
+{
+    QSettings settings("conf.ini",QSettings::IniFormat);
+    settings.setIniCodec("GBK");
+
+    ui->action_show_graph->setChecked(settings.value("GraphWindowOpen",true).toBool());
+    ui->action_show_selector->setChecked(settings.value("ListWindowOpen",true).toBool());
+    ui->action_show_log->setChecked(settings.value("LogWindowOpen",true).toBool());
+}
+
+//保存全局配置
+void MainWindow::saveGlobalConf()
+{
+    QSettings settings("conf.ini",QSettings::IniFormat);
+    settings.setIniCodec("GBK");
+
+    settings.setValue("GraphWindowOpen",!graph->isHidden());
+    settings.setValue("ListWindowOpen",!listWindow->isHidden());
+    settings.setValue("LogWindowOpen",!logWindow->isHidden());
 }
 
 //复位按钮点击，向gdb发送复位指令
@@ -619,13 +683,6 @@ void MainWindow::on_action_help_triggered()
     HelpWindow().exec();
 }
 
-//显示绘图窗口菜单点击
-void MainWindow::on_action_show_graph_triggered()
-{
-    graph->show();
-    graph->activateWindow();
-}
-
 //刷新连接配置菜单点击
 void MainWindow::on_action_refresh_conf_triggered()
 {
@@ -644,13 +701,6 @@ void MainWindow::setStylesheet()
     QFile qss(":/qss/light-blue.qss");
     if(qss.open(QIODevice::ReadOnly))
         qApp->setStyleSheet(QLatin1String(qss.readAll()));
-}
-
-//显示选择窗口菜单点击
-void MainWindow::on_action_show_selector_triggered()
-{
-    listWindow->show();
-    listWindow->activateWindow();
 }
 
 //反馈菜单点击
@@ -734,4 +784,16 @@ void MainWindow::on_bt_refresh_serial_clicked()
 {
     ui->cb_com->clear();
     ui->cb_com->addItems(serialocd->getSerialList());
+}
+
+//日志使能状态切换
+void MainWindow::on_cb_log_toggled(bool checked)
+{
+    if(connected)
+    {
+        if(checked)
+            logTimer->start();
+        else
+            logTimer->stop();
+    }
 }

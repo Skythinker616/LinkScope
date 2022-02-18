@@ -27,6 +27,7 @@
 #include <gdbprocess.h>
 #include <openocd.h>
 #include <serialocd.h>
+#include <logwindow.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -46,6 +47,7 @@ private slots:
     void slotTableEdit(QModelIndex topleft, QModelIndex bottomright);
     void slotWatchTimerTrig();
     void slotTableTimerTrig();
+    void slotLogTimerTrig();
     void slotOnVarAdd2Edit(const QString &name);
     void slotOnVarAdd2List(const QString &name);
     void slotOnConnErrorOccur(const QString &info);
@@ -59,15 +61,14 @@ private slots:
     void on_action_export_triggered();
     void on_action_about_triggered();
     void on_action_help_triggered();
-    void on_action_show_graph_triggered();
     void on_action_refresh_conf_triggered();
     void on_action_homepage_triggered();
-    void on_action_show_selector_triggered();
     void on_action_feedback_triggered();
     void on_action_checkupdate_triggered();
     void on_rb_openocd_toggled(bool checked);
     void on_rb_serialocd_toggled(bool checked);
     void on_bt_refresh_serial_clicked();
+    void on_cb_log_toggled(bool checked);
 
 private:
     Ui::MainWindow *ui;
@@ -78,12 +79,13 @@ private:
     bool connected=false;//标记当前是否已连接
     QStandardItemModel *tableModel;//表格数据
     QList<VarInfo> varList;//变量列表
-    QTimer *watchTimer,*tableTimer;//定时器，用于查看变量值和刷新表格
+    QTimer *watchTimer,*tableTimer,*logTimer;//定时器，用于查看变量值、刷新表格和监视日志
     QElapsedTimer *stampTimer;//时间戳定时器指针
     GraphWindow *graph;//绘图窗口指针
     bool isWatchProcessing=false;//标记当前是否正在处理变量值查看
     bool axfChosen=false;//是否已经选择了axf文件
     ListWindow *listWindow;
+    LogWindow *logWindow;
     void checkUpdate();
     void setStylesheet();
     void setConnState(bool connect);
@@ -91,8 +93,11 @@ private:
     void loadConfFileList();
     void initTable();
     void redrawTable();
+    void updateGDBList();
     void saveToFile(const QString &filename);
     void loadFromFile(const QString &filename);
     bool exportCSV(const QString &filename);
+    void loadGlobalConf();
+    void saveGlobalConf();
 };
 #endif // MAINWINDOW_H
