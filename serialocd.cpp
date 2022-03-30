@@ -78,7 +78,8 @@ void SerialOCD::slotSocketReadyRead()
         {"qOffsets","TextSeg=0"},
         {"qTStatus","T1"},
         {"qSymbol","OK"},
-        {"m0,1","00"}
+        {"m0,1","00"},
+        {"qRcmd,726573756d65","OK"}
     };
 
     QString input=socket->readAll();//获取接收数据

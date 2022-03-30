@@ -45,6 +45,7 @@ void GDBProcess::stop()
 void GDBProcess::connectToRemote(const QString &addr)
 {
     runCmd("target remote "+addr+"\r\n");
+    runCmd("monitor resume\r\n");//恢复目标程序运行
 }
 
 //命令GDB从远处目标断开

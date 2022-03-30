@@ -79,7 +79,7 @@ private:
     bool connected=false;//标记当前是否已连接
     QStandardItemModel *tableModel;//表格数据
     QList<VarInfo> varList;//变量列表
-    QTimer *watchTimer,*tableTimer,*logTimer;//定时器，用于查看变量值、刷新表格和监视日志
+    QTimer *watchTimer,*tableTimer,*logTimer,*autosaveTimer;//定时器，用于查看变量值、刷新表格、监视日志和定时保存
     QElapsedTimer *stampTimer;//时间戳定时器指针
     GraphWindow *graph;//绘图窗口指针
     bool isWatchProcessing=false;//标记当前是否正在处理变量值查看

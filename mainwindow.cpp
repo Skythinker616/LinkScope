@@ -43,6 +43,11 @@ MainWindow::MainWindow(QWidget *parent)
     logTimer->stop();
     connect(logTimer,SIGNAL(timeout()),this,SLOT(slotLogTimerTrig()));
 
+    autosaveTimer=new QTimer(this);//创建自动保存定时器
+    autosaveTimer->setInterval(5000);//5s自动保存
+    autosaveTimer->start();
+    connect(autosaveTimer,&QTimer::timeout,this,[=]{saveToFile("autosave.ini");});
+
     tableModel=new QStandardItemModel(this);//创建并初始化表格
     initTable();
 
@@ -58,6 +63,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     loadConfFileList();//从openocd文件夹中读取配置文件列表
     loadGlobalConf();//加载软件全局配置
+    loadFromFile("autosave.ini");//加载自动保存的工程配置
 }
 
 MainWindow::~MainWindow()
