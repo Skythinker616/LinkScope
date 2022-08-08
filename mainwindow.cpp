@@ -51,6 +51,9 @@ MainWindow::MainWindow(QWidget *parent)
     tableModel=new QStandardItemModel(this);//创建并初始化表格
     initTable();
 
+    tablePopMenu=new QMenu(ui->tb_var);//创建表格右键菜单
+    tablePopMenu->addAction(ui->action_del_var);
+
     openocd=new OpenOCD();//创建OpenOCD对象并连接错误处理槽
     connect(openocd,&OpenOCD::onErrorOccur,this,&MainWindow::slotOnConnErrorOccur,Qt::QueuedConnection);
 
@@ -64,6 +67,8 @@ MainWindow::MainWindow(QWidget *parent)
     loadConfFileList();//从openocd文件夹中读取配置文件列表
     loadGlobalConf();//加载软件全局配置
     loadFromFile("autosave.ini");//加载自动保存的工程配置
+
+    QTimer::singleShot(100,this,&MainWindow::checkOpenocdProcess);//窗口加载完成后检查是否有正在运行的openocd进程
 }
 
 MainWindow::~MainWindow()
@@ -80,6 +85,7 @@ MainWindow::~MainWindow()
     gdb->stop();//结束gdb进程
     delete ui;
     delete tableModel;
+    delete tablePopMenu;
     delete openocd;
     delete gdb;
     delete stampTimer;
@@ -602,6 +608,16 @@ void MainWindow::on_tb_var_clicked(const QModelIndex &index)
     }
 }
 
+//表格右键菜单槽函数
+void MainWindow::on_tb_var_customContextMenuRequested(const QPoint &pos)
+{
+    QModelIndex index=ui->tb_var->indexAt(pos);//获取所点击的单元格索引
+    if(index.column()==0 && index.row()<varList.size())
+    {
+        tablePopMenu->exec(QCursor::pos());//弹出右键菜单
+    }
+}
+
 //保存配置菜单点击
 void MainWindow::on_action_save_triggered()
 {
@@ -715,6 +731,23 @@ void MainWindow::on_action_feedback_triggered()
     QDesktopServices::openUrl(QUrl("https://support.qq.com/product/378753"));//打开反馈页面
 }
 
+//删除选中变量槽函数
+void MainWindow::on_action_del_var_triggered()
+{
+    if(ui->tb_var->currentIndex().column()==0)//确定已选中某个变量的变量名
+    {
+        int index=ui->tb_var->currentIndex().row();//获取所选变量的下标
+        if(index<varList.size())
+        {
+            varList.removeAt(index);//删除变量
+            redrawTable();
+
+            if(connected)//若正在连接状态则向gdb发送新的变量列表
+                updateGDBList();
+        }
+    }
+}
+
 //检查更新
 void MainWindow::checkUpdate()
 {
@@ -765,6 +798,31 @@ void MainWindow::checkUpdate()
     request.setHeader(QNetworkRequest::ContentTypeHeader,"application/x-www-form-urlencoded");
     request.setUrl(QUrl("https://gitee.com/api/v5/repos/skythinker/link-scope/releases/latest"));//发送get请求到gitee服务器
     manager->get(request);
+}
+
+//检查后台是否存在openocd进程，存在的话询问用户是否关闭
+void MainWindow::checkOpenocdProcess()
+{
+    QProcess listProcess(0);//使用tasklist查找openocd进程
+    listProcess.setProgram("tasklist");
+    listProcess.setNativeArguments("/fi \"imagename eq openocd.exe\"");
+    listProcess.start();
+    listProcess.waitForFinished();
+    if(listProcess.readAllStandardOutput().contains("openocd.exe"))//后台存在openocd进程
+    {
+        QMessageBox msgBox;
+        msgBox.setWindowTitle("提示");
+        msgBox.setText("发现正在运行的OpenOCD进程，可能是由于上次不正常退出导致的，是否强制结束？（若您没有其他正在调试的程序建议结束）");
+        msgBox.setStandardButtons(QMessageBox::Yes|QMessageBox::No);
+        if(msgBox.exec()==QMessageBox::Yes)
+        {
+            QProcess killProcess(0);//用taskkill强行结束进程
+            killProcess.setProgram("taskkill");
+            killProcess.setNativeArguments("/F /IM openocd.exe");
+            killProcess.start();
+            killProcess.waitForFinished();
+        }
+    }
 }
 
 //检查更新菜单点击

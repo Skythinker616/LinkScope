@@ -16,7 +16,11 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout_2">
     <item>
-     <widget class="QTableView" name="tb_var"/>
+     <widget class="QTableView" name="tb_var">
+      <property name="contextMenuPolicy">
+       <enum>Qt::CustomContextMenu</enum>
+      </property>
+     </widget>
     </item>
     <item>
      <layout class="QGridLayout" name="gridLayout">
@@ -330,6 +334,14 @@
    </property>
    <property name="text">
     <string>日志窗口</string>
+   </property>
+  </action>
+  <action name="action_del_var">
+   <property name="text">
+    <string>删除此变量</string>
+   </property>
+   <property name="toolTip">
+    <string>删除选中的变量</string>
    </property>
   </action>
  </widget>

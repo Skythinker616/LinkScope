@@ -30,7 +30,7 @@ QString ListWindow::getVarFullName(const VarNode &node)
 {
     const VarNode *curNode=&node;
     QString fullName=node.name;
-    while(curNode->parent->parent)//到父节点为根节点为止
+    while(curNode->parent->parent->parent)//到父节点为文件节点为止
     {
         if(curNode->name.contains('['))//若为数组元素，父节点为数组名，直接拼接（无需加'.'）
             fullName=curNode->parent->name+fullName;
@@ -41,14 +41,51 @@ QString ListWindow::getVarFullName(const VarNode &node)
     return fullName;
 }
 
+//计算一个节点所在的文件名
+QString ListWindow::getVarFileName(const VarNode &node,bool isFull)
+{
+    const VarNode *curNode=&node;
+    while(curNode->parent->parent)//到父节点为根节点为止
+        curNode=curNode->parent;
+    QString filename=curNode->name;
+    if(isFull)
+        return filename;//返回全路径
+    else
+        return filename.split("/").last().split("\\").last();//返回文件名部分
+}
+
 //解析一个节点的子节点，并更新子节点的可展开状态
 void ListWindow::parseVarChildren(VarNode &node)
 {
+    static QString rawVarInfo="";//展开根节点时保存"info variables"结果，展开文件名时直接从中解析，提高效率
+
     if(node.parent==NULL)//传入的是根节点
     {
-        QString rawVarList=gdb->runCmd("info variables\r\n");//使用info variables指令列出axf中所有变量
-        gdb->removeInnerSection(rawVarList,0);//移除内部直接嵌套的部分
-        QStringList varList=gdb->getVarListFromRawOutput(rawVarList);//解析出变量列表
+        rawVarInfo=gdb->runCmd("info variables\r\n");//使用info variables指令列出axf中所有变量
+        gdb->removeInnerSection(rawVarInfo,0);//移除内部直接嵌套的部分
+
+        QRegExp fileRx("\\nFile\\s(.*):\\r\\n");//正则匹配获取所有文件名并添加为节点
+        fileRx.setMinimal(true);
+        int pos=0;
+        while((pos=fileRx.indexIn(rawVarInfo,pos))!=-1)
+        {
+            node.append(fileRx.cap(1));
+            node.children.last().expandable=true;
+            pos+=fileRx.matchedLength();
+        }
+    }
+    else if(node.parent->parent==NULL)//传入的是文件名节点
+    {
+        QString regName="";
+        for(int i=0;i<node.name.length();i++)//将文件名每个字符转换为16进制格式，用于正则匹配
+            regName+=QString("\\x%1").arg(node.name.at(i).unicode(),0,16);
+
+        int startPos=QRegExp(QString("\\nFile\\s%1:\\r\\n").arg(regName)).indexIn(rawVarInfo);//找到文件名所在位置
+        int endPos=QRegExp("\\nFile\\s(.*):\\r\\n").indexIn(rawVarInfo,startPos+1);//找到下一个文件名所在位置
+        if(endPos==-1)
+            endPos=rawVarInfo.length()-1;
+
+        QStringList varList=gdb->getVarListFromRawOutput(rawVarInfo.mid(startPos,endPos-startPos));//截取两个位置之间的子串解析变量列表
         foreach(QString name,varList)//依次添加子节点并更新可展开状态
         {
             node.append(name);
@@ -146,8 +183,15 @@ void ListWindow::on_btn_add2edit_clicked()
     if(index.row()==-1)
         return;
     VarNode &node=*(VarNode*)(treeModel->itemFromIndex(index)->data().toULongLong());//获取所选节点
-    if(node.parent)
-        emit add2Edit(getVarFullName(node));//将变量全名使用信号发出去
+    if(node.parent && node.parent->parent)
+    {
+        QString varName=getVarFullName(node);
+        if(ui->cb_use_path->isChecked())
+            emit add2Edit("\'"+getVarFileName(node,ui->cb_full_path->isChecked())+"\'::"+varName);
+        else
+            emit add2Edit(varName);
+    }
+
 }
 
 //添加到列表按钮槽函数（逻辑与添加到编辑框相同，仅发送的信号不同）
@@ -157,6 +201,18 @@ void ListWindow::on_btn_add2list_clicked()
     if(index.row()==-1)
         return;
     VarNode &node=*(VarNode*)(treeModel->itemFromIndex(index)->data().toULongLong());
-    if(node.parent)
-        emit add2List(getVarFullName(node));
+    if(node.parent && node.parent->parent)
+    {
+        QString varName=getVarFullName(node);
+        if(ui->cb_use_path->isChecked())
+            emit add2List("\'"+getVarFileName(node,ui->cb_full_path->isChecked())+"\'::"+varName);
+        else
+            emit add2List(varName);
+    }
+}
+
+//附带文件名选框槽函数
+void ListWindow::on_cb_use_path_toggled(bool checked)
+{
+    ui->cb_full_path->setEnabled(checked);
 }

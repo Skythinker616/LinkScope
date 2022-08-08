@@ -56,6 +56,7 @@ private slots:
     void on_bt_reset_clicked();
     void on_tb_var_doubleClicked(const QModelIndex &index);
     void on_tb_var_clicked(const QModelIndex &index);
+    void on_tb_var_customContextMenuRequested(const QPoint &pos);
     void on_action_save_triggered();
     void on_action_load_triggered();
     void on_action_export_triggered();
@@ -65,6 +66,7 @@ private slots:
     void on_action_homepage_triggered();
     void on_action_feedback_triggered();
     void on_action_checkupdate_triggered();
+    void on_action_del_var_triggered();
     void on_rb_openocd_toggled(bool checked);
     void on_rb_serialocd_toggled(bool checked);
     void on_bt_refresh_serial_clicked();
@@ -84,9 +86,11 @@ private:
     GraphWindow *graph;//绘图窗口指针
     bool isWatchProcessing=false;//标记当前是否正在处理变量值查看
     bool axfChosen=false;//是否已经选择了axf文件
-    ListWindow *listWindow;
-    LogWindow *logWindow;
+    ListWindow *listWindow;//选择窗口指针
+    LogWindow *logWindow;//日志窗口指针
+    QMenu *tablePopMenu;//右键点击表格时弹出的菜单
     void checkUpdate();
+    void checkOpenocdProcess();
     void setStylesheet();
     void setConnState(bool connect);
     void sleep(uint32_t ms);
