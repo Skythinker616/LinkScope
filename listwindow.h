@@ -58,6 +58,7 @@ private slots:
     void on_btn_add2edit_clicked();
     void on_btn_add2list_clicked();
     void on_cb_use_path_toggled(bool checked);
+    void on_btn_refresh_clicked();
 
 private:
     Ui::ListWindow *ui;
@@ -65,6 +66,7 @@ private:
     GDBProcess *gdb;
     VarNode varTree;
     QStandardItemModel *treeModel;
+    QString axfPath;
     QString getVarFullName(const VarNode &node);
     QString getVarFileName(const VarNode &node,bool isFull);
     void parseVarChildren(VarNode &node);

@@ -18,13 +18,13 @@ OpenOCD::~OpenOCD()
 }
 
 //启动OCD进程并设定调试器类型、芯片类型、gdb端口号
-void OpenOCD::start(const QString &chosenInterface,const QString &chosenTarget,int gdbPort)
+void OpenOCD::start(const QString &chosenInterface,const QString &chosenTarget,const QString &extraParam,int gdbPort)
 {
     process->setWorkingDirectory(QCoreApplication::applicationDirPath()+"/openocd/bin");//设置工作路径
     process->setProgram(QCoreApplication::applicationDirPath()+"/openocd/bin/openocd.exe");//设置程序路径
     process->setNativeArguments(
-                QString("-f interface/%1 -f target/%2 -c \"gdb_port %3\" -c \"tcl_port disabled;telnet_port disabled\"")
-                .arg(chosenInterface).arg(chosenTarget).arg(gdbPort));//设置参数为所选的调试器、目标芯片和gdb端口
+                QString("-f interface/%1 -f target/%2 -c \"gdb_port %3\" -c \"tcl_port disabled;telnet_port disabled;%4\"")
+                .arg(chosenInterface).arg(chosenTarget).arg(gdbPort).arg(extraParam));//设置参数为所选的调试器、目标芯片和gdb端口
     process->start();
 }
 

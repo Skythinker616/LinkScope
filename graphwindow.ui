@@ -23,7 +23,7 @@
       <item>
        <widget class="QLabel" name="label">
         <property name="toolTip">
-         <string>画面中显示的采样点数</string>
+         <string/>
         </property>
         <property name="text">
          <string>水平分辨率(sec/Div)</string>
@@ -209,6 +209,9 @@
      </item>
      <item>
       <widget class="QCheckBox" name="cb_update">
+       <property name="toolTip">
+        <string>自动保持时间轴在末端以显示最新数据</string>
+       </property>
        <property name="text">
         <string>实时更新</string>
        </property>

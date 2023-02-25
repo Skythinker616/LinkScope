@@ -21,6 +21,9 @@
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
       <widget class="QPushButton" name="bt_clear">
+       <property name="toolTip">
+        <string>清空收到的日志</string>
+       </property>
        <property name="text">
         <string>清空日志</string>
        </property>
@@ -28,6 +31,9 @@
      </item>
      <item>
       <widget class="QPushButton" name="bt_export">
+       <property name="toolTip">
+        <string>导出已收到的日志到CSV表格文件</string>
+       </property>
        <property name="text">
         <string>导出日志</string>
        </property>

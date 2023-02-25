@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
+    <width>404</width>
     <height>680</height>
    </rect>
   </property>
@@ -28,8 +28,18 @@
     </widget>
    </item>
    <item>
-    <layout class="QGridLayout" name="gridLayout">
-     <item row="0" column="0">
+    <layout class="QGridLayout" name="gridLayout" columnstretch="0,0,0">
+     <item row="0" column="2">
+      <widget class="QCheckBox" name="cb_use_path">
+       <property name="toolTip">
+        <string>勾选后将在添加到列表时指定文件名，用于区分不同文件中的同名变量</string>
+       </property>
+       <property name="text">
+        <string>附带文件名</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
       <widget class="QPushButton" name="btn_add2list">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
@@ -37,12 +47,15 @@
          <verstretch>0</verstretch>
         </sizepolicy>
        </property>
+       <property name="toolTip">
+        <string>将选中的变量直接添加到主窗口的查看列表</string>
+       </property>
        <property name="text">
         <string>直接添加到列表</string>
        </property>
       </widget>
      </item>
-     <item row="1" column="0">
+     <item row="1" column="1">
       <widget class="QPushButton" name="btn_add2edit">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
@@ -50,25 +63,44 @@
          <verstretch>0</verstretch>
         </sizepolicy>
        </property>
+       <property name="toolTip">
+        <string>将选中的变量添加到主窗口查看列表底部的编辑框</string>
+       </property>
        <property name="text">
         <string>添加到编辑框</string>
        </property>
       </widget>
      </item>
-     <item row="0" column="1">
-      <widget class="QCheckBox" name="cb_use_path">
-       <property name="text">
-        <string>附带文件名</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="1">
+     <item row="1" column="2">
       <widget class="QCheckBox" name="cb_full_path">
        <property name="enabled">
         <bool>false</bool>
        </property>
+       <property name="toolTip">
+        <string>附带文件名时使用文件绝对路径</string>
+       </property>
        <property name="text">
         <string>使用全路径</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0" rowspan="2">
+      <widget class="QPushButton" name="btn_refresh">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="toolTip">
+        <string>重新加载符号文件</string>
+       </property>
+       <property name="text">
+        <string>刷
+新</string>
+       </property>
+       <property name="flat">
+        <bool>false</bool>
        </property>
       </widget>
      </item>

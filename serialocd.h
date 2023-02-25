@@ -13,13 +13,21 @@
 #include <QTime>
 #include <qtimer.h>
 
+struct SerialParam {
+    QString name;
+    int baudRate;
+    QSerialPort::DataBits dataBits;
+    QSerialPort::StopBits stopBits;
+    QSerialPort::Parity parity;
+};
+
 class SerialOCD : public QThread
 {
     Q_OBJECT
 public:
     explicit SerialOCD(QObject *parent = nullptr);
     QStringList getSerialList();
-    void startConnect(const QString &serial,int port);
+    void startConnect(const SerialParam &param,int port);
     void stopConnect();
 
 signals:
@@ -40,6 +48,7 @@ private:
     QTcpSocket *socket;
     QSerialPort *port;
     QString serialName;
+    SerialParam serialParam;
     int listenPort;
     QByteArray serialBuf;
     QTimer *waitReadMemTimer;
@@ -47,7 +56,7 @@ private:
     bool startServer(int port);
     void stopServer();
     void sendToClient(const QString &data);
-    bool startSerial(const QString &name);
+    bool startSerial(const SerialParam &param);
     void stopSerial();
     void parseSerial();
     void sendSerialReadMem(int addr,int len);

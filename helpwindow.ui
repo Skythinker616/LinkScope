@@ -32,9 +32,9 @@
       <property name="geometry">
        <rect>
         <x>0</x>
-        <y>0</y>
+        <y>-922</y>
         <width>523</width>
-        <height>1283</height>
+        <height>1366</height>
        </rect>
       </property>
       <property name="autoFillBackground">
@@ -53,52 +53,7 @@
           </sizepolicy>
          </property>
          <property name="text">
-          <string>&lt;html&gt;
-&lt;head&gt;
-    &lt;style&gt;
-        li{margin-top: 10px;}
-    &lt;/style&gt;
-&lt;/head&gt;
-&lt;body&gt;
-    &lt;p&gt;&lt;span style=&quot;font-weight:600;&quot;&gt;LinkScope简介&lt;/span&gt;&lt;/p&gt;
-    &lt;p&gt;本程序使用QT编写，用于硬件设备的调试，可直接驱动串口或各种调试器（基于OpenOCD支持），有以下几个主要功能&lt;/p&gt;
-    &lt;ol&gt;
-        &lt;li&gt;实时查看和修改变量值&lt;/li&gt;
-        &lt;li&gt;变量值波形实时绘制&lt;/li&gt;
-        &lt;li&gt;采样数据导出为CSV表格&lt;/li&gt;
-        &lt;li&gt;格式化日志输出&lt;/li&gt;
-    &lt;/ol&gt;
-    &lt;p&gt;调试器连接模式理论上支持OpenOCD允许GDB连接的各种调试器及硬件芯片，如STLink、JLink、CMSIS-DAP等以及STM32全系列等&lt;/p&gt;
-    &lt;hr /&gt;
-    &lt;p&gt;&lt;span style=&quot;font-weight:600;&quot;&gt;使用方法&lt;/span&gt;&lt;/p&gt;
-    &lt;ol&gt;
-        &lt;li&gt;点击【设置符号文件】选择编译器输出的符号文件，然后添加变量到列表中&lt;/li&gt;
-        &lt;ul&gt;
-            &lt;li&gt;加载符号文件后即可在变量选择窗口添加需要查看的变量，可以直接添加到列表或添加到编辑框后进行手动编辑&lt;/li&gt;
-            &lt;li&gt;在主窗口表格最后一行变量名（编辑框）处手动填写也可以添加变量&lt;/li&gt;
-            &lt;li&gt;在变量名上右键可删除变量，或在选中变量名后按Del键&lt;/li&gt;
-            &lt;li&gt;变量名不仅可以填入单个变量名，还可以填入合法的C语言表达式（GDB支持即可）；复合类型不能修改和绘图，只能实时查看&lt;/li&gt;
-        &lt;/ul&gt;
-        &lt;li&gt;选择连接模式，连接芯片，连接后程序开始循环采样，勾选【监视日志】后即可将下位机输出的日志实时显示出来&lt;/li&gt;
-        &lt;ul&gt;
-            &lt;li&gt;调试器模式下，在下拉框中选择调试器和芯片类型，点击连接目标&lt;/li&gt;
-            &lt;li&gt;串口模式下，点击刷新串口加载串口列表，选中所连接的串口，点击连接目标&lt;/li&gt;
-            &lt;li&gt;串口功能和日志功能都需要修改下位机程序，可以在菜单中进入主页查看说明&lt;/li&gt;
-        &lt;/ul&gt;
-        &lt;li&gt;编辑【修改变量】列可以修改变量值，双击【图线颜色】列可以选择绘图颜色 &lt;/li&gt;
-        &lt;li&gt;单击【变量名】列选中对应的变量，可以在绘图窗口查看历史数据，并会加粗绘制 &lt;/li&gt;
-        &lt;li&gt;绘图界面说明请到绘图窗口点击操作说明 &lt;/li&gt;
-        &lt;li&gt;点击菜单中的保存/导入配置可以将当前配置保存到INI文件或从文件中恢复配置，点击导出数据可以将获取到的采样数据导出到CSV表格文件&lt;/li&gt;
-    &lt;/ol&gt;
-    &lt;hr /&gt;
-    &lt;p&gt;&lt;span style=&quot;font-weight:600;&quot;&gt;注意事项 &lt;/span&gt;&lt;/p&gt;
-    &lt;ul&gt;
-        &lt;li&gt;修改符号文件路径后需要重新连接 &lt;/li&gt;
-        &lt;li&gt;连接目标前请确认已使用该调试器为目标芯片下载过指定程序 &lt;/li&gt;
-        &lt;li&gt;连接配置文件位于openocd/share/openocd/scripts下的target和interface中，用户可按照openocd语法编写配置脚本，放入对应目录下后点击“刷新连接配置”菜单项&lt;/li&gt;
-    &lt;/ul&gt;
-&lt;/body&gt;
-&lt;/html&gt;</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;LinkScope简介&lt;/span&gt;&lt;/p&gt;&lt;p&gt;本程序使用QT编写，用于硬件设备的调试，可直接驱动串口或各种调试器（基于OpenOCD支持），有以下几个主要功能 &lt;/p&gt;&lt;ol style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;实时查看和修改变量值 &lt;/li&gt;&lt;li style=&quot; margin-top:10px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;变量值波形实时绘制 &lt;/li&gt;&lt;li style=&quot; margin-top:10px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;采样数据导出为CSV表格 &lt;/li&gt;&lt;li style=&quot; margin-top:10px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;格式化日志输出 &lt;/li&gt;&lt;/ol&gt;&lt;p&gt;调试器连接模式理论上支持OpenOCD允许GDB连接的各种调试器及硬件芯片，如STLink、JLink、CMSIS-DAP等以及STM32全系列等 &lt;/p&gt;&lt;hr/&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;使用方法&lt;/span&gt;&lt;/p&gt;&lt;ol style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;点击【设置符号文件】选择编译器输出的符号文件，然后添加变量到列表中 &lt;/li&gt;&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 2;&quot;&gt;&lt;li style=&quot; margin-top:10px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;加载符号文件后即可在变量选择窗口添加需要查看的变量，可以直接添加到列表或添加到编辑框后进行手动编辑 &lt;/li&gt;&lt;li style=&quot; margin-top:10px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;在主窗口表格最后一行变量名（编辑框）处手动填写也可以添加变量 &lt;/li&gt;&lt;li style=&quot; margin-top:10px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;在变量名上右键可删除变量，或在选中变量名后按Del键 &lt;/li&gt;&lt;li style=&quot; margin-top:10px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;变量名不仅可以填入单个变量名，还可以填入合法的C语言表达式（GDB支持即可）；复合类型不能修改和绘图，只能实时查看 &lt;/li&gt;&lt;/ul&gt;&lt;li style=&quot; margin-top:10px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;选择连接模式，连接芯片，连接后程序开始循环采样，勾选【监视日志】后即可将下位机输出的日志实时显示出来 &lt;/li&gt;&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 2;&quot;&gt;&lt;li style=&quot; margin-top:10px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;调试器模式下，在下拉框中选择调试器和芯片类型，点击连接目标 &lt;/li&gt;&lt;li style=&quot; margin-top:10px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;串口模式下，点击刷新串口加载串口列表，选中所连接的串口，点击连接目标 &lt;/li&gt;&lt;li style=&quot; margin-top:10px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;串口功能和日志功能都需要修改下位机程序，可以在菜单中进入主页查看说明 &lt;/li&gt;&lt;/ul&gt;&lt;li style=&quot; margin-top:10px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;编辑【修改变量】列可以修改变量值，双击【图线颜色】列可以选择绘图颜色 &lt;/li&gt;&lt;li style=&quot; margin-top:10px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;单击【变量名】列选中对应的变量，可以在绘图窗口查看历史数据，并会加粗绘制 &lt;/li&gt;&lt;li style=&quot; margin-top:10px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;绘图界面说明请到绘图窗口点击操作说明 &lt;/li&gt;&lt;li style=&quot; margin-top:10px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;点击菜单中的保存/导入配置可以将当前配置保存到INI文件或从文件中恢复配置，点击导出数据可以将获取到的采样数据导出到CSV表格文件 &lt;/li&gt;&lt;/ol&gt;&lt;hr/&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;注意事项 &lt;/span&gt;&lt;/p&gt;&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;修改符号文件路径后需要重新连接 &lt;/li&gt;&lt;li style=&quot; margin-top:10px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;连接目标前请确认已使用该调试器为目标芯片下载过指定程序 &lt;/li&gt;&lt;li style=&quot; margin-top:10px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;连接配置文件位于openocd/share/openocd/scripts下的target和interface中，用户可按照openocd语法编写配置脚本，放入对应目录下后点击“刷新连接配置”菜单项 &lt;/li&gt;&lt;li style=&quot; margin-top:10px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;若内置的OpenOCD无法支持目标芯片，可以先在外部手动启动一个OpenOCD进程，然后勾选“外部进程”后连接使用 &lt;/li&gt;&lt;li style=&quot; margin-top:10px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;若希望查看更详细的说明，请在菜单栏点击“转到主页”&lt;/li&gt;&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="textFormat">
           <enum>Qt::AutoText</enum>

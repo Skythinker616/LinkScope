@@ -6,9 +6,9 @@ SerialOCD::SerialOCD(QObject *parent) : QThread(parent)
 }
 
 //启动OCD（由主线程调用）
-void SerialOCD::startConnect(const QString &serial, int port)
+void SerialOCD::startConnect(const SerialParam &param, int port)
 {
-    serialName=serial;//保存串口号和端口号后启动子线程
+    serialParam=param;//保存串口配置和端口号后启动子线程
     listenPort=port;
     start();//启动线程
 }
@@ -25,7 +25,7 @@ void SerialOCD::stopConnect()
 //子线程函数
 void SerialOCD::run()
 {
-    if(startSerial(serialName) && startServer(listenPort))//串口和tcp都连接成功才进入事件循环
+    if(startSerial(serialParam) && startServer(listenPort))//串口和tcp都连接成功才进入事件循环
         exec();//进行事件循环
 }
 
@@ -150,25 +150,25 @@ QStringList SerialOCD::getSerialList()
 }
 
 //启动串口连接，返回是否连接成功
-bool SerialOCD::startSerial(const QString &name)
+bool SerialOCD::startSerial(const SerialParam &param)
 {
     waitReadMemTimer=new QTimer();//创建读内存超时定时器
     waitReadMemTimer->setSingleShot(true);//仅运行一次
-    waitReadMemTimer->setInterval(1000);//超时设定为1s
+    waitReadMemTimer->setInterval(3000);//超时设定为3s
     connect(waitReadMemTimer,&QTimer::timeout,[=]{
         sendToClient("00000000");
         emit onErrorOccur("内存数据读取超时");
     });
 
     port=new QSerialPort();//创建串口对象
-    port->setPortName(name);//设定端口号
+    port->setPortName(param.name);//设定端口号
     if(port->open(QIODevice::ReadWrite))//打开串口
     {
-        port->setBaudRate(QSerialPort::Baud115200,QSerialPort::AllDirections); //波特率115200
-        port->setDataBits(QSerialPort::Data8); //8数据位
+        port->setBaudRate(param.baudRate,QSerialPort::AllDirections); //波特率115200
+        port->setDataBits(param.dataBits); //8数据位
         port->setFlowControl(QSerialPort::NoFlowControl);
-        port->setParity(QSerialPort::NoParity); //无校验位
-        port->setStopBits(QSerialPort::OneStop); //1停止位
+        port->setParity(param.parity); //无校验位
+        port->setStopBits(param.stopBits); //1停止位
         connect(port,SIGNAL(readyRead()),this,SLOT(slotSerialReadyRead()),Qt::DirectConnection);
         //退出时断开串口
         connect(this,&SerialOCD::onStopConnect,port,&QSerialPort::close,Qt::QueuedConnection);

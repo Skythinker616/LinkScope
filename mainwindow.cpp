@@ -53,6 +53,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     tablePopMenu=new QMenu(ui->tb_var);//创建表格右键菜单
     tablePopMenu->addAction(ui->action_del_var);
+    tablePopMenu->addAction(ui->action_del_all);
 
     openocd=new OpenOCD();//创建OpenOCD对象并连接错误处理槽
     connect(openocd,&OpenOCD::onErrorOccur,this,&MainWindow::slotOnConnErrorOccur,Qt::QueuedConnection);
@@ -67,6 +68,8 @@ MainWindow::MainWindow(QWidget *parent)
     loadConfFileList();//从openocd文件夹中读取配置文件列表
     loadGlobalConf();//加载软件全局配置
     loadFromFile("autosave.ini");//加载自动保存的工程配置
+
+    watchTimer->setInterval(1000/configWindowParam.sampleFreq);
 
     QTimer::singleShot(100,this,&MainWindow::checkOpenocdProcess);//窗口加载完成后检查是否有正在运行的openocd进程
 }
@@ -281,16 +284,29 @@ void MainWindow::setConnState(bool connect)
 
         if(ui->rb_openocd->isChecked())//选择的是OpenOCD模式
         {
-            openocd->start(ui->cb_interface->currentText(),ui->cb_target->currentText(),3333);//运行openocd进程进行目标连接
-            sleep(500);//等待500ms
-            if(openocd->isRunning())
+            if(!ui->cb_ext_openocd->isChecked())//使用内置openocd进程
+            {
+                openocd->start(ui->cb_interface->currentText(),ui->cb_target->currentText(),configWindowParam.ocdParam,configWindowParam.gdbPort);//运行openocd进程进行目标连接
+                sleep(500);//等待500ms
+                if(openocd->isRunning())
+                    ocdStartSuccess=true;
+            }
+            else//使用外部openocd
+            {
                 ocdStartSuccess=true;
+            }
         }
         else if(ui->rb_serialocd->isChecked())//选择的是串口模式
         {
             if(!ui->cb_com->currentText().isEmpty())
             {
-                serialocd->startConnect(ui->cb_com->currentText(),3333);//启动SerialOCD
+                serialocd->startConnect(SerialParam{
+                    ui->cb_com->currentText(),
+                    configWindowParam.baudrate,
+                    configWindowParam.databits,
+                    configWindowParam.stopbits,
+                    configWindowParam.parity},
+                    configWindowParam.gdbPort);//启动SerialOCD
                 sleep(500);
                 if(serialocd->isRunning())
                     ocdStartSuccess=true;
@@ -303,8 +319,11 @@ void MainWindow::setConnState(bool connect)
 
         if(ocdStartSuccess)//若ocd成功启动
         {
+            foreach(QString cmd, configWindowParam.gdbParam.split(';'))//执行用户设定的指令
+                if(cmd.length()>0)
+                    gdb->runCmd(cmd+"\r\n");
             gdb->loadSymbolFile(ui->txt_axf_path->text());//设置gdb符号文件
-            gdb->connectToRemote("localhost:3333");//连接gdb到ocd
+            gdb->connectToRemote(QString("localhost:%1").arg(configWindowParam.gdbPort));//连接gdb到ocd
             updateGDBList();//向gdb发送变量列表
 
             for(int i=0;i<varList.size();i++)//清空变量列表历史采样点数据
@@ -335,7 +354,7 @@ void MainWindow::setConnState(bool connect)
             logTimer->stop();
         gdb->disconnectFromRemote();//断开gdb
         gdb->unloadSymbolFile();//卸载符号文件
-        if(ui->rb_openocd->isChecked())//根据连接方式选择结束ocd
+        if(ui->rb_openocd->isChecked() && !ui->cb_ext_openocd->isChecked())//根据连接方式选择结束ocd
             openocd->stop();
         else if(ui->rb_serialocd->isChecked())
             serialocd->stopConnect();
@@ -460,6 +479,16 @@ void MainWindow::saveToFile(const QString &filename)
     settings.setValue("LogEnabled",ui->cb_log->isChecked());
     settings.setValue("VarNum",varList.size());
     settings.endGroup();
+    settings.beginGroup("ConfigWindow");//写入配置窗口数据
+    settings.setValue("BaudRate",configWindowParam.baudrate);
+    settings.setValue("Databits",configWindowParam.databits);
+    settings.setValue("Stopbits",configWindowParam.stopbits);
+    settings.setValue("Parity",configWindowParam.parity);
+    settings.setValue("SampleFreq",configWindowParam.sampleFreq);
+    settings.setValue("GdbPort",configWindowParam.gdbPort);
+    settings.setValue("GdbParam",configWindowParam.gdbParam);
+    settings.setValue("OcdParam",configWindowParam.ocdParam);
+    settings.endGroup();
 
     for(int index=0;index<varList.size();index++)//写入每个变量的配置信息（不会写入采样点数据）
     {
@@ -488,7 +517,17 @@ void MainWindow::loadFromFile(const QString &filename)
     axfChosen=settings.value("AxfChosen",true).toBool();
     ui->txt_axf_path->setText(settings.value("AxfPath").toString());
     ui->cb_log->setChecked(settings.value("LogEnabled",false).toBool());
-    int varNum=settings.value("VarNum").toInt();
+    int varNum=settings.value("VarNum").toInt();    
+    settings.endGroup();
+    settings.beginGroup("ConfigWindow");//读取配置窗口数据
+    configWindowParam.baudrate=settings.value("BaudRate",115200).toInt();
+    configWindowParam.databits=(QSerialPort::DataBits)settings.value("Databits",8).toInt();
+    configWindowParam.stopbits=(QSerialPort::StopBits)settings.value("Stopbits",1).toInt();
+    configWindowParam.parity=(QSerialPort::Parity)settings.value("Parity",0).toInt();
+    configWindowParam.sampleFreq=settings.value("SampleFreq",100).toInt();
+    configWindowParam.gdbPort=settings.value("GdbPort",3333).toInt();
+    configWindowParam.gdbParam=settings.value("GdbParam","").toString();
+    configWindowParam.ocdParam=settings.value("OcdParam","").toString();
     settings.endGroup();
 
     varList.clear();
@@ -860,4 +899,34 @@ void MainWindow::on_cb_log_toggled(bool checked)
         else
             logTimer->stop();
     }
+}
+
+//内外openocd进程切换
+void MainWindow::on_cb_ext_openocd_toggled(bool checked)
+{
+    ui->cb_interface->setEnabled(!checked);
+    ui->cb_target->setEnabled(!checked);
+}
+
+//高级配置菜单点击
+void MainWindow::on_action_config_triggered()
+{
+    ConfigWindow configWindow;
+    configWindow.setParam(configWindowParam);
+    if(configWindow.exec()==QDialog::Accepted)
+    {
+        configWindow.getParam(configWindowParam);
+        watchTimer->setInterval(1000/configWindowParam.sampleFreq);
+        saveToFile("autosave.ini");
+    }
+}
+
+//清空查看列表
+void MainWindow::on_action_del_all_triggered()
+{
+    varList.clear();//删除所有变量
+    redrawTable();//重绘表格
+
+    if(connected)//若正在连接状态则向gdb发送新的变量列表
+        updateGDBList();
 }

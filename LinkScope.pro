@@ -11,7 +11,7 @@ CONFIG += c++11
 # depend on your compiler). Please consult the documentation of the
 # deprecated API in order to know how to port your code away from it.
 DEFINES += QT_DEPRECATED_WARNINGS \
-    APP_VERSION=\\\"1.2.2\\\"
+    APP_VERSION=\\\"1.3.0\\\"
 
 # You can also make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
@@ -20,6 +20,7 @@ DEFINES += QT_DEPRECATED_WARNINGS \
 
 SOURCES += \
     aboutwindow.cpp \
+    configwindow.cpp \
     gdbprocess.cpp \
     graphwindow.cpp \
     helpwindow.cpp \
@@ -32,6 +33,7 @@ SOURCES += \
 
 HEADERS += \
     aboutwindow.h \
+    configwindow.h \
     gdbprocess.h \
     graphwindow.h \
     helpwindow.h \
@@ -44,6 +46,7 @@ HEADERS += \
 
 FORMS += \
     aboutwindow.ui \
+    configwindow.ui \
     graphwindow.ui \
     helpwindow.ui \
     listwindow.ui \

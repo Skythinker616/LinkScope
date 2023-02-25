@@ -67,10 +67,16 @@ void ListWindow::parseVarChildren(VarNode &node)
         QRegExp fileRx("\\nFile\\s(.*):\\r\\n");//正则匹配获取所有文件名并添加为节点
         fileRx.setMinimal(true);
         int pos=0;
+        QStringList fileNameList;//存放已解析的文件名，用于去重
         while((pos=fileRx.indexIn(rawVarInfo,pos))!=-1)
         {
-            node.append(fileRx.cap(1));
-            node.children.last().expandable=true;
+            QString name=fileRx.cap(1);
+            if(!fileNameList.contains(name))
+            {
+                node.append(name);
+                node.children.last().expandable=true;
+                fileNameList.append(name);
+            }
             pos+=fileRx.matchedLength();
         }
     }
@@ -80,16 +86,23 @@ void ListWindow::parseVarChildren(VarNode &node)
         for(int i=0;i<node.name.length();i++)//将文件名每个字符转换为16进制格式，用于正则匹配
             regName+=QString("\\x%1").arg(node.name.at(i).unicode(),0,16);
 
-        int startPos=QRegExp(QString("\\nFile\\s%1:\\r\\n").arg(regName)).indexIn(rawVarInfo);//找到文件名所在位置
-        int endPos=QRegExp("\\nFile\\s(.*):\\r\\n").indexIn(rawVarInfo,startPos+1);//找到下一个文件名所在位置
-        if(endPos==-1)
-            endPos=rawVarInfo.length()-1;
+        int startPos=0, endPos=0;
 
-        QStringList varList=gdb->getVarListFromRawOutput(rawVarInfo.mid(startPos,endPos-startPos));//截取两个位置之间的子串解析变量列表
-        foreach(QString name,varList)//依次添加子节点并更新可展开状态
+        while(true)//循环查找每一个匹配的文件名
         {
-            node.append(name);
-            node.children.last().expandable=gdb->checkExpandableType(getVarFullName(node.children.last()));
+            startPos=QRegExp(QString("\\nFile\\s%1:\\r\\n").arg(regName)).indexIn(rawVarInfo,endPos);//找到文件名所在位置
+            if(startPos==-1)
+                break;
+            endPos=QRegExp("\\nFile\\s(.*):\\r\\n").indexIn(rawVarInfo,startPos+1);//找到下一个文件名所在位置
+            if(endPos==-1)
+                endPos=rawVarInfo.length()-1;
+
+            QStringList varList=gdb->getVarListFromRawOutput(rawVarInfo.mid(startPos,endPos-startPos));//截取两个位置之间的子串解析变量列表
+            foreach(QString name,varList)//依次添加子节点并更新可展开状态
+            {
+                node.append(name);
+                node.children.last().expandable=gdb->checkExpandableType(getVarFullName(node.children.last()));
+            }
         }
     }
     else//传入的是普通节点
@@ -136,6 +149,7 @@ void ListWindow::parseVarChildren(VarNode &node)
 //加载AXF文件
 void ListWindow::loadNewAxfFile(const QString &path)
 {
+    axfPath=path;
     gdb->loadSymbolFile(path);
     updateTree();//更新树状图
 }
@@ -161,6 +175,7 @@ void ListWindow::on_tree_expanded(const QModelIndex &index)
     VarNode &node=*(VarNode*)(item->data().toULongLong());//获取对应的节点
     if(!node.parsed)//若节点未解析过，则进行解析
     {
+        setWindowTitle("[加载中] LinkScope - Selector");
         parseVarChildren(node);//解析该节点的子节点，更新各子节点的可展开状态
         item->removeRows(0,item->rowCount());//先清空当前item下的所有子项
         for(int i=0;i<node.children.length();i++)//依次创建并添加各子节点的item
@@ -173,6 +188,7 @@ void ListWindow::on_tree_expanded(const QModelIndex &index)
                 childItem->appendRow(new QStandardItem());
             item->appendRow(childItem);//子节点item附加到当前被展开的item下
         }
+        setWindowTitle("LinkScope - Selector");
     }
 }
 
@@ -215,4 +231,10 @@ void ListWindow::on_btn_add2list_clicked()
 void ListWindow::on_cb_use_path_toggled(bool checked)
 {
     ui->cb_full_path->setEnabled(checked);
+}
+
+//刷新按钮槽函数
+void ListWindow::on_btn_refresh_clicked()
+{
+    loadNewAxfFile(axfPath);
 }

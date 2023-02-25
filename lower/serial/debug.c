@@ -14,7 +14,8 @@
 #define DEBUG_READ_ADDR_RANGE(addr) (addr>=0x20000000 && addr<=0x20001000)
 //写地址限制条件，若请求的地址addr不符合条件则不会写入，无需限制可不定义
 #define DEBUG_WRITE_ADDR_RANGE(addr) (addr>=0x20000000 && addr<=0x20001000)
-
+//读写偏移地址，无偏移可不定义
+#define DEBUG_ADDR_OFFSET 0x00000000
 /**************↑配置区↑**************/
 
 //接收缓存区（循环队列）大小，不建议修改
@@ -94,6 +95,9 @@ void Debug_ParseBuffer()
 				uint32_t addr=0; //计算目标地址
 				for(uint8_t i=0;i<4;i++)
 					addr|=((uint32_t)DEBUG_QUEUE_AT(4+i))<<(i*8);
+				#ifdef DEBUG_ADDR_OFFSET
+					addr+=DEBUG_ADDR_OFFSET;
+				#endif
 				debugTxBuf[0]=DEBUG_FRAME_HEADER; //构建发送数据帧
 				debugTxBuf[1]=byteNum+3;
 				debugTxBuf[2]=SerialCMD_ReadMem;
@@ -116,6 +120,9 @@ void Debug_ParseBuffer()
 				uint32_t addr=0; //计算目标地址
 				for(uint8_t i=0;i<4;i++)
 					addr|=((uint32_t)DEBUG_QUEUE_AT(3+i))<<(i*8);
+				#ifdef DEBUG_ADDR_OFFSET
+					addr+=DEBUG_ADDR_OFFSET;
+				#endif
 				for(uint8_t i=0;i<byteNum;i++) //依次写入数据
 				{
 					#ifdef DEBUG_WRITE_ADDR_RANGE

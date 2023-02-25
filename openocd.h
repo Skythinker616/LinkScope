@@ -12,7 +12,7 @@ class OpenOCD : public QObject
 public:
     explicit OpenOCD(QObject *parent = nullptr);
     ~OpenOCD();
-    void start(const QString &chosenInterface,const QString &chosenTarget,int gdbPort);
+    void start(const QString &chosenInterface,const QString &chosenTarget,const QString &extraParam,int gdbPort);
     void stop();
     bool isRunning();
 

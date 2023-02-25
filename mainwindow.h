@@ -28,6 +28,7 @@
 #include <openocd.h>
 #include <serialocd.h>
 #include <logwindow.h>
+#include <configwindow.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -71,6 +72,9 @@ private slots:
     void on_rb_serialocd_toggled(bool checked);
     void on_bt_refresh_serial_clicked();
     void on_cb_log_toggled(bool checked);
+    void on_cb_ext_openocd_toggled(bool checked);
+    void on_action_config_triggered();
+    void on_action_del_all_triggered();
 
 private:
     Ui::MainWindow *ui;
@@ -89,6 +93,7 @@ private:
     ListWindow *listWindow;//选择窗口指针
     LogWindow *logWindow;//日志窗口指针
     QMenu *tablePopMenu;//右键点击表格时弹出的菜单
+    ConfigWindowParam configWindowParam;//配置窗口数据
     void checkUpdate();
     void checkOpenocdProcess();
     void setStylesheet();

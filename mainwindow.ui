@@ -82,6 +82,16 @@
              </property>
             </widget>
            </item>
+           <item>
+            <widget class="QCheckBox" name="cb_ext_openocd">
+             <property name="toolTip">
+              <string>勾选后请先启动一个外部OpenOCD进程，本程序将直接连接至该进程</string>
+             </property>
+             <property name="text">
+              <string>外部进程</string>
+             </property>
+            </widget>
+           </item>
           </layout>
          </widget>
         </item>
@@ -130,6 +140,9 @@
            </item>
            <item>
             <widget class="QPushButton" name="bt_refresh_serial">
+             <property name="toolTip">
+              <string>扫描当前的串口到下拉列表中</string>
+             </property>
              <property name="text">
               <string>刷新串口</string>
              </property>
@@ -148,6 +161,9 @@
         <layout class="QVBoxLayout" name="verticalLayout">
          <item>
           <widget class="QPushButton" name="bt_conn">
+           <property name="toolTip">
+            <string>连接到目标芯片</string>
+           </property>
            <property name="text">
             <string>连接目标</string>
            </property>
@@ -157,6 +173,9 @@
           <widget class="QPushButton" name="bt_reset">
            <property name="enabled">
             <bool>false</bool>
+           </property>
+           <property name="toolTip">
+            <string>发送复位指令</string>
            </property>
            <property name="text">
             <string>复位并运行</string>
@@ -209,6 +228,9 @@
        </item>
        <item>
         <widget class="QPushButton" name="bt_set_axf">
+         <property name="toolTip">
+          <string>设置符号文件后才能使用变量名查看变量值，否则只能使用绝对地址</string>
+         </property>
          <property name="text">
           <string>设置符号文件</string>
          </property>
@@ -238,6 +260,8 @@
     <addaction name="action_load"/>
     <addaction name="separator"/>
     <addaction name="action_export"/>
+    <addaction name="separator"/>
+    <addaction name="action_config"/>
    </widget>
    <widget class="QMenu" name="menu_2">
     <property name="title">
@@ -268,15 +292,27 @@
    <property name="text">
     <string>保存配置</string>
    </property>
+   <property name="toolTip">
+    <string>保存配置</string>
+   </property>
+   <property name="statusTip">
+    <string>保存当前界面配置到INI文件</string>
+   </property>
   </action>
   <action name="action_load">
    <property name="text">
     <string>导入配置</string>
    </property>
+   <property name="statusTip">
+    <string>导入一个界面配置文件</string>
+   </property>
   </action>
   <action name="action_export">
    <property name="text">
     <string>导出数据</string>
+   </property>
+   <property name="statusTip">
+    <string>导出采样数据到CSV表格文件</string>
    </property>
   </action>
   <action name="action_help">
@@ -296,6 +332,9 @@
    <property name="text">
     <string>绘图窗口</string>
    </property>
+   <property name="statusTip">
+    <string>显示或隐藏绘图窗口</string>
+   </property>
   </action>
   <action name="action_refresh_conf">
    <property name="text">
@@ -304,10 +343,16 @@
    <property name="toolTip">
     <string>刷新连接配置</string>
    </property>
+   <property name="statusTip">
+    <string>加载OpenOCD配置文件到调试器下拉列表</string>
+   </property>
   </action>
   <action name="action_homepage">
    <property name="text">
     <string>转到主页</string>
+   </property>
+   <property name="statusTip">
+    <string>转到开源仓库主页</string>
    </property>
   </action>
   <action name="action_show_selector">
@@ -317,10 +362,16 @@
    <property name="text">
     <string>选择窗口</string>
    </property>
+   <property name="statusTip">
+    <string>显示或隐藏变量选择窗口</string>
+   </property>
   </action>
   <action name="action_feedback">
    <property name="text">
     <string>反馈</string>
+   </property>
+   <property name="statusTip">
+    <string>打开反馈页面</string>
    </property>
   </action>
   <action name="action_checkupdate">
@@ -335,13 +386,32 @@
    <property name="text">
     <string>日志窗口</string>
    </property>
+   <property name="statusTip">
+    <string>显示或隐藏日志窗口</string>
+   </property>
   </action>
   <action name="action_del_var">
    <property name="text">
-    <string>删除此变量</string>
+    <string>删除选中变量</string>
    </property>
    <property name="toolTip">
     <string>删除选中的变量</string>
+   </property>
+  </action>
+  <action name="action_config">
+   <property name="text">
+    <string>高级设置</string>
+   </property>
+   <property name="statusTip">
+    <string>打开高级设置窗口</string>
+   </property>
+  </action>
+  <action name="action_del_all">
+   <property name="text">
+    <string>删除所有变量</string>
+   </property>
+   <property name="toolTip">
+    <string>删除所有变量</string>
    </property>
   </action>
  </widget>
